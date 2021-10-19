@@ -5,7 +5,6 @@ import json
 from socket import timeout
 from time import sleep
 from abc import abstractmethod
-import traceback
 
 from util.api_enums import APIEnums
 from util.api_exceptions import ValidationException
@@ -27,8 +26,9 @@ class APIBase:
         self.scheme = APIEnums.SCHEME.value
 
     @abstractmethod
-    def validation_function(self):
+    def validation_function(self, response):
         """Abstract method for API-specific validation functions."""
+        return response
 
     @staticmethod
     def _encode_payload(payload=None):
@@ -52,9 +52,12 @@ class APIBase:
         netloc = host
         path = endpoint
         params = params
-        query = query
+        query = (
+            urllib.parse.urlencode(query, doseq=True)
+            if query
+            else None
+        )
         fragment = None
-        query = urllib.parse.urlencode(query, doseq=True) if query else None
         url = urllib.parse.urlunparse(
             (scheme, netloc, path, params, query, fragment)
         )
