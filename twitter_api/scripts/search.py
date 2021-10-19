@@ -17,9 +17,7 @@ def search():
     t = TwitterAPI()
 
     results = t.perform_search(query)
-    import json
-
-    print(results.get("data"))
+    print(results)
 
 
 if __name__ == "__main__":
