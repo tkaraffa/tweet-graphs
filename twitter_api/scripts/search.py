@@ -1,4 +1,5 @@
 import argparse
+import json
 
 from twitter_api.twitter_api import TwitterAPI
 
@@ -16,8 +17,16 @@ def search():
 
     t = TwitterAPI()
 
+    tweets = list()
+
     results = t.perform_search(query)
-    print(results)
+    tweets.extend(results.get("data"))
+    for _ in range(5):
+        next_token = results.get("meta").get("next_token")
+        results = t.perform_search(query, next_token=next_token)
+        tweets.extend(results.get("data"))
+    with open("results.json", "w+") as f:
+        json.dump(tweets, f, sort_keys=True, indent=2)
 
 
 if __name__ == "__main__":

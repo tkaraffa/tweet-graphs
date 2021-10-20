@@ -2,7 +2,7 @@ from enum import Enum
 
 
 class TwitterAPIDefaults(Enum):
-    MAX_RESULTS = 100
+    MAX_RESULTS = 10
 
 
 class TwitterURLs(Enum):
@@ -69,10 +69,10 @@ class TweetTweetFields(Enum):
     ID = "id"
     IN_REPLY_TO_USER_ID = "in_reply_to_user_id"
     LANG = "lang"
-    NON_PUBLIC_METRICS = "non_public_metrics"
-    PUBLIC_METRICS = "public_metrics"
-    ORGANIC_METRICS = "organic_metrics"
-    PROMOTED_METRICS = "promoted_metrics"
+    # NON_PUBLIC_METRICS = "non_public_metrics"
+    # PUBLIC_METRICS = "public_metrics"
+    # ORGANIC_METRICS = "organic_metrics"
+    # PROMOTED_METRICS = "promoted_metrics"
     POSSIBLY_SENSITIVE = "possibly_sensitive"
     REFERENCED_TWEETS = "referenced_tweets"
     REPLY_SETTINGS = "reply_settings"

@@ -62,7 +62,11 @@ class TwitterAPI(APIBase):
         pass
 
     @staticmethod
-    def _create_query(query, max_results=100, next_token=None):
+    def _create_query(
+        query, max_results=100, next_token=None, include_retweets=False
+    ):
+        if include_retweets is False:
+            query += " -is:retweet"
         expansions = ",".join([i.value for i in TweetExpansions])
         media_fields = ",".join([i.value for i in TweetMediaFields])
         place_fields = ",".join([i.value for i in TweetPlaceFields])
