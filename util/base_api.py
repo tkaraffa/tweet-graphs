@@ -52,11 +52,7 @@ class APIBase:
         netloc = host
         path = endpoint
         params = params
-        query = (
-            urllib.parse.urlencode(query, doseq=True)
-            if query
-            else None
-        )
+        query = urllib.parse.urlencode(query, doseq=True) if query else None
         fragment = None
         url = urllib.parse.urlunparse(
             (scheme, netloc, path, params, query, fragment)
@@ -102,3 +98,8 @@ class APIBase:
         data = self._retry_request(self._send_request, request, **kwargs)
         if data:
             return data
+
+    @staticmethod
+    def write_json_file(json_data, filename="results.json"):
+        with open(filename, "w+") as f:
+            json.dump(json_data, f, sort_keys=True, indent=2)
