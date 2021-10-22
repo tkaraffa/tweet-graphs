@@ -11,4 +11,4 @@ COPY ./ /code
 # RUN pip install --user -r requirements.txt
 # RUN pip install --user -r global_requirments.txt
 
-ENTRYPOINT ["python"]
+ENTRYPOINT ["python", "twitter_api/scripts/search.py"]
