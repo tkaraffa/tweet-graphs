@@ -3,6 +3,9 @@ from enum import Enum
 
 class TwitterAPIDefaults(Enum):
     MAX_RESULTS = 10
+    META = "meta"
+    DATA = "data"
+    NEXT_TOKEN = "next_token"
 
 
 class TwitterURLs(Enum):
