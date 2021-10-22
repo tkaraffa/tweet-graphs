@@ -39,6 +39,10 @@ class TwitterAPI(APIBase):
         self.endpoints = self._create_endpoints()
         self.validation_func = self.twitter_api_validation()
 
+        self.meta = TwitterAPIDefaults.META.value
+        self.data = TwitterAPIDefaults.DATA.value
+        self.next_token = TwitterAPIDefaults.NEXT_TOKEN.value
+
     @staticmethod
     def _create_headers(bearer_token):
         return {
@@ -102,3 +106,12 @@ class TwitterAPI(APIBase):
         data = self._send_request(search_request)
         data = self.pull_request_data(search_request)
         return json.loads(data)
+
+    def paginate_tweets(self, query, n_pages=5):
+        tweets = list()
+        next_token = None
+        for _ in range(n_pages):
+            page_results = self.perform_search(query, next_token=next_token)
+            tweets.extend(page_results.get(self.data))
+            next_token = page_results.get(self.meta).get(self.next_token)
+        return tweets
