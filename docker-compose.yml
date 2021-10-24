@@ -4,7 +4,7 @@ services:
   twitter:
     build:
       context: .
-      dockerfile: Dockerfile
+      dockerfile: twitter_api/Dockerfile
     image: api-twitter
     environment:
       API_KEY: ${API_KEY}
@@ -12,5 +12,7 @@ services:
       BEARER_TOKEN: ${BEARER_TOKEN}
       ACCESS_TOKEN: ${ACCESS_TOKEN}
       ACCESS_TOKEN_SECRET: ${ACCESS_TOKEN_SECRET}
+      GOOGLE_APPLICATION_CREDENTIALS: ${GOOGLE_APPLICATION_CREDENTIALS}
     volumes:
       - ./:/code
+      
