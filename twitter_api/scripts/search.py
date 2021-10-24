@@ -1,6 +1,11 @@
 import argparse
+from datetime import datetime
 
 from twitter_api.twitter_api import TwitterAPI
+
+
+def format_now():
+    return datetime.strftime(datetime.now(), "%Y%m%d")
 
 
 def check_json(file: str):
@@ -33,6 +38,12 @@ def get_args():
         help="The name of the file in which to save results.",
         required=False,
     )
+    parser.add_argument(
+        "--bucket",
+        type=str,
+        help="The GCS Bucket in which to upload resutls.",
+        required=True,
+    )
     return parser.parse_args()
 
 
@@ -41,11 +52,13 @@ def search():
     query = args.query
     n_pages = args.n_pages
     outfile = args.outfile
+    bucket = args.bucket
 
     t = TwitterAPI()
+    now = format_now()
     results = t.paginate_tweets(query, n_pages=n_pages)
-    filename = outfile or f"{query}.json"
-    t.write_json_file(results, filename)
+    filename = outfile or f"{query}_{now}.json"
+    t.write_and_upload(results, filename, bucket)
 
 
 if __name__ == "__main__":
