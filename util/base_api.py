@@ -2,11 +2,16 @@ import urllib.parse
 import urllib.request
 import urllib.error
 import json
+import csv
 from socket import timeout
 from time import sleep
 from abc import abstractmethod
+import os
+from pathlib import Path
 
-from util.api_enums import APIEnums
+from google.cloud.storage import Client
+
+from util.api_enums import APIEnums, FileFormats
 from util.api_exceptions import ValidationException
 
 
@@ -24,6 +29,28 @@ class APIBase:
         self.timeout = 15
 
         self.scheme = APIEnums.SCHEME.value
+
+        self.file_formats = self.file_format_functions()
+
+    def file_format_functions(self):
+        """When a new file fomatted is added, it must be added in several places:
+        * in api_enums.py in FileFormats
+        * in this file in a _write_<file_format>_file method
+        * in this function's format_functions dictionary
+        """
+        formats = {i.value for i in FileFormats}
+        format_functions = {
+            FileFormats.CSV.value: self._write_csv_file,
+            FileFormats.JSON.value: self._write_json_file,
+        }
+
+        not_implemented = formats.symmetric_difference(set(format_functions))
+        if not_implemented:
+            raise NotImplementedError(
+                "Some formats do not have write functions implemented:"
+                f"{', '.join(list(not_implemented))}"
+            )
+        return format_functions
 
     @abstractmethod
     def validation_function(self, response):
@@ -100,6 +127,42 @@ class APIBase:
             return data
 
     @staticmethod
-    def write_json_file(json_data, filename="results.json"):
+    def _write_json_file(data, filename):
         with open(filename, "w+") as f:
-            json.dump(json_data, f, sort_keys=True, indent=2)
+            json.dump(data, f, sort_keys=True, indent=2)
+
+    @staticmethod
+    def _write_csv_file(data, filename):
+        with open(filename, "w+") as f:
+            writer = csv.writer(f)
+            writer.writerows(data)
+
+    @staticmethod
+    def _upload_file(filename, bucket, **kwargs):
+        client = Client()
+        bucket = client.get_bucket(bucket)
+        blob = bucket.blob(filename)
+        blob.upload_from_filename(filename, **kwargs)
+
+    def _write_and_upload(self, data, filename, bucket, write_func, **kwargs):
+        write_func(data=data, filename=filename)
+        self._upload_file(filename, bucket, **kwargs)
+        os.remove(filename)
+
+    def write_and_upload(self, data, filename, bucket, **kwargs):
+
+        file_extension = Path(filename).suffix
+
+        write_func = self.file_formats.get(file_extension)
+        if not write_func:
+            raise NotImplementedError(
+                f"Type {type} is not implemented yet. "
+                f"Only {', '.join(self.file_formats)} are supported."
+            )
+        return self._write_and_upload(
+            data=data,
+            filename=filename,
+            bucket=bucket,
+            write_func=write_func,
+            **kwargs,
+        )
