@@ -24,7 +24,6 @@ class TwitterAPI(APIBase):
         access_token_secret=None,
     ) -> None:
         super().__init__()
-
         self.max_results = TwitterAPIDefaults.MAX_RESULTS.value
         self.validation_function = self.twitter_api_validation
         self.bearer_token = bearer_token or os.getenv("BEARER_TOKEN")
