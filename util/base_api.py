@@ -9,10 +9,10 @@ from abc import abstractmethod
 import os
 from pathlib import Path
 
-from google.cloud.storage import Client
-
 from util.api_enums import APIEnums, FileFormats
 from util.api_exceptions import ValidationException
+
+from util.gcs_utils import upload_file_to_bucket
 
 
 class APIBase:
@@ -129,7 +129,9 @@ class APIBase:
     @staticmethod
     def _write_json_file(data, filename):
         with open(filename, "w+") as f:
-            json.dump(data, f, sort_keys=True, indent=2)
+            for line in data:
+                json.dump(line, f)
+                f.write("\n")
 
     @staticmethod
     def _write_csv_file(data, filename):
@@ -137,32 +139,16 @@ class APIBase:
             writer = csv.writer(f)
             writer.writerows(data)
 
-    @staticmethod
-    def _upload_file(filename, bucket, **kwargs):
-        client = Client()
-        bucket = client.get_bucket(bucket)
-        blob = bucket.blob(filename)
-        blob.upload_from_filename(filename, **kwargs)
-
-    def _write_and_upload(self, data, filename, bucket, write_func, **kwargs):
-        write_func(data=data, filename=filename)
-        self._upload_file(filename, bucket, **kwargs)
-        os.remove(filename)
-
     def write_and_upload(self, data, filename, bucket, **kwargs):
 
         file_extension = Path(filename).suffix
-
         write_func = self.file_formats.get(file_extension)
         if not write_func:
             raise NotImplementedError(
                 f"Type {type} is not implemented yet. "
                 f"Only {', '.join(self.file_formats)} are supported."
             )
-        return self._write_and_upload(
-            data=data,
-            filename=filename,
-            bucket=bucket,
-            write_func=write_func,
-            **kwargs,
-        )
+
+        write_func(data=data, filename=filename)
+        upload_file_to_bucket(filename, bucket, **kwargs)
+        os.remove(filename)
