@@ -3,17 +3,22 @@ variable "project" {
   sensitive = true
 }
 
+variable "project_name" {
+  type      = string
+  sensitive = true
+}
+
 variable "location" {
   type      = string
   sensitive = true
 }
 
 variable "zone" {
-  type=string
+  type      = string
   sensitive = true
 }
 
 variable "user_email" {
-  type=string
+  type      = string
   sensitive = true
 }
