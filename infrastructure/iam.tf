@@ -6,7 +6,6 @@ resource "google_project_iam_policy" "project" {
 data "google_iam_policy" "admin" {
   binding {
     role = "roles/owner"
-
     members = [
       var.user_email
     ]

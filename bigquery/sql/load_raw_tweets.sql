@@ -1,4 +1,4 @@
-insert into tweets.raw_tweets (
+merge into tweets.raw_tweets (
 
     select
         "1",

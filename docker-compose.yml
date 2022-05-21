@@ -14,11 +14,11 @@ services:
       GOOGLE_APPLICATION_CREDENTIALS: ${GOOGLE_APPLICATION_CREDENTIALS}
     volumes:
       - ./:/code
-      
+
   bigquery:
     build:
       context: .
-      dockerfile: bigquery_load/Dockerfile
+      dockerfile: bigquery/Dockerfile
     environment:
       GOOGLE_APPLICATION_CREDENTIALS: ${GOOGLE_APPLICATION_CREDENTIALS}
     volumes:
