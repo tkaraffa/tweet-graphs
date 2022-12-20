@@ -1,5 +1,6 @@
 import os
 from pathlib import Path
+from sqlalchemy import text
 
 SQL_DIRECTORY = os.path.join(os.path.dirname(__file__), "sql")
 
@@ -19,12 +20,24 @@ def get_query(filename: str) -> str:
     query: str
         The string representation of the query
     """
-
     sql_suffix = ".sql"
-    if not filename.lower().endswith(sql_suffix):
-        filename = Path(filename).with_suffix(sql_suffix)
-    full_file_path = os.path.join(SQL_DIRECTORY, filename)
-    print(full_file_path)
+    file_path = Path(filename)
+
+    # make sure sql file exists
+    if file_path.suffix not in (sql_suffix, ""):
+        raise NotImplementedError(
+            f"You used a {file_path.suffix} file. "
+            + "Use either a stem or a .sql file!"
+        )
+    full_file_path = os.path.join(
+        SQL_DIRECTORY, file_path.with_suffix(sql_suffix)
+    )
+    if not os.path.exists(full_file_path):
+        raise FileNotFoundError(
+            f"{full_file_path} does not exist!"
+            + f"Check {SQL_DIRECTORY} for your file."
+        )
+
     with open(full_file_path, "r") as f:
-        query = " ".join(line.strip("\n") for line in f.readlines())
+        query = text(f.read())
     return query
