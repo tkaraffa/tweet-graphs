@@ -7,9 +7,16 @@ data "google_iam_policy" "admin" {
   binding {
     role = "roles/owner"
     members = [
-      var.user_email
+      var.owner_email
     ]
   }
+
+  binding {
+    role    = "roles/editor"
+    members = var.user_email
+
+  }
+
   binding {
     role = "roles/editor"
     members = [

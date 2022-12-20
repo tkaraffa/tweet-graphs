@@ -123,8 +123,7 @@ class APIBase:
 
     def pull_request_data(self, request, **kwargs):
         data = self._retry_request(self._send_request, request, **kwargs)
-        if data:
-            return data
+        return data
 
     @staticmethod
     def _write_json_file(data, filename):

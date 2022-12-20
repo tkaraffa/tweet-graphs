@@ -24,5 +24,5 @@ data "google_service_account_key" "tweet-graphs-key" {
 
 resource "local_file" "tweets-account" {
   content  = base64decode(google_service_account_key.tweet-graphs-key.private_key)
-  filename = "../serviceaccount.json"
+  filename = "../service-account.json"
 }

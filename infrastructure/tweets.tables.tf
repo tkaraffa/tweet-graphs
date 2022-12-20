@@ -1,26 +1,35 @@
-resource "google_bigquery_table" "raw-tweets" {
+locals {
+  tweet_columns = <<EOF
+    {
+      "name": "test",
+      "type": "STRING",
+      "comment": "test data"
+    },
+    {
+      "name": "test2",
+      "type": "STRING",
+      "comment": "test data"
+    }
+  EOF
+}
+
+resource "google_bigquery_table" "raw_tweets" {
   dataset_id = google_bigquery_dataset.tweet-graphs.dataset_id
   table_id   = "raw_tweets"
-  schema     = <<EOF
-  [
-    {
-        "name": "source",
-        "type": "string",
-        "mode": "NULLABLE",
-        "description": "The source of this data."
-    },
-    {
-        "name": "filename",
-        "type": "string",
-        "description": "The filename from which this data was loaded"
-    },
-    {
-        "name": "json_text",
-        "type": "string",
-        "comment": "raw json data"
-    }
-  ]
- EOF
+
+  external_data_configuration {
+    autodetect    = true
+    source_format = "NEWLINE_DELIMITED_JSON"
+    source_uris = [
+      "${google_storage_bucket.tweets.url}/*.jsonl"
+    ]
+    ignore_unknown_values = true
+    schema                = <<EOF
+    [
+      ${join(",", [local.tweet_columns])}
+    ]
+   EOF
+  }
 }
 
 resource "google_bigquery_table" "tweets" {
@@ -28,12 +37,7 @@ resource "google_bigquery_table" "tweets" {
   table_id   = "tweets"
   schema     = <<EOF
   [
-    {
-        "name": "id",
-        "type": "integer",
-        "mode": "REQUIRED",
-        "description": "Artificially added ID."
-    }
+    ${join(",", [local.meta_columns, local.tweet_columns])}
   ]
-  EOF
+ EOF
 }

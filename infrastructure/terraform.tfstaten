@@ -1,0 +1,245 @@
+{
+  "version": 4,
+  "terraform_version": "1.3.6",
+  "serial": 211,
+  "lineage": "d92befc5-b7c7-2f25-c6e5-8db3c2b11e77",
+  "outputs": {},
+  "resources": [
+    {
+      "mode": "data",
+      "type": "google_iam_policy",
+      "name": "admin",
+      "provider": "provider[\"registry.terraform.io/hashicorp/google\"]",
+      "instances": [
+        {
+          "schema_version": 0,
+          "attributes": {
+            "audit_config": null,
+            "binding": [
+              {
+                "condition": [],
+                "members": [
+                  "serviceAccount:tweet-graphs@tweet-graphs-330003.iam.gserviceaccount.com"
+                ],
+                "role": "roles/editor"
+              },
+              {
+                "condition": [],
+                "members": [
+                  "user:tdkaraffa@gmail.com"
+                ],
+                "role": "roles/owner"
+              },
+              {
+                "condition": [],
+                "members": [],
+                "role": "roles/editor"
+              }
+            ],
+            "id": "3951741965",
+            "policy_data": "{\"bindings\":[{\"members\":[\"serviceAccount:tweet-graphs@tweet-graphs-330003.iam.gserviceaccount.com\"],\"role\":\"roles/editor\"},{\"role\":\"roles/editor\"},{\"members\":[\"user:tdkaraffa@gmail.com\"],\"role\":\"roles/owner\"}]}"
+          },
+          "sensitive_attributes": [
+            [
+              {
+                "type": "get_attr",
+                "value": "binding"
+              }
+            ]
+          ]
+        }
+      ]
+    },
+    {
+      "mode": "managed",
+      "type": "google_bigquery_dataset",
+      "name": "tweet-graphs",
+      "provider": "provider[\"registry.terraform.io/hashicorp/google\"]",
+      "instances": [
+        {
+          "schema_version": 0,
+          "attributes": {
+            "access": [
+              {
+                "domain": "",
+                "group_by_email": "",
+                "role": "OWNER",
+                "special_group": "",
+                "user_by_email": "tdkaraffa@gmail.com",
+                "view": []
+              },
+              {
+                "domain": "",
+                "group_by_email": "",
+                "role": "OWNER",
+                "special_group": "projectOwners",
+                "user_by_email": "",
+                "view": []
+              },
+              {
+                "domain": "",
+                "group_by_email": "",
+                "role": "READER",
+                "special_group": "projectReaders",
+                "user_by_email": "",
+                "view": []
+              },
+              {
+                "domain": "",
+                "group_by_email": "",
+                "role": "WRITER",
+                "special_group": "projectWriters",
+                "user_by_email": "",
+                "view": []
+              }
+            ],
+            "creation_time": 1671379415418,
+            "dataset_id": "tweets",
+            "default_encryption_configuration": [],
+            "default_partition_expiration_ms": 0,
+            "default_table_expiration_ms": 0,
+            "delete_contents_on_destroy": false,
+            "description": "Tweets in raw and transformed formats",
+            "etag": "AkVIdA8jSuZNq3XwmttCkg==",
+            "friendly_name": "tweets",
+            "id": "projects/tweet-graphs-330003/datasets/tweets",
+            "labels": {
+              "env": "default"
+            },
+            "last_modified_time": 1671379415418,
+            "location": "us-central1",
+            "project": "tweet-graphs-330003",
+            "self_link": "https://bigquery.googleapis.com/bigquery/v2/projects/tweet-graphs-330003/datasets/tweets",
+            "timeouts": null
+          },
+          "sensitive_attributes": [
+            [
+              {
+                "type": "get_attr",
+                "value": "location"
+              }
+            ],
+            [
+              {
+                "type": "get_attr",
+                "value": "project"
+              }
+            ]
+          ],
+          "private": "eyJlMmJmYjczMC1lY2FhLTExZTYtOGY4OC0zNDM2M2JjN2M0YzAiOnsiY3JlYXRlIjoyNDAwMDAwMDAwMDAsImRlbGV0ZSI6MjQwMDAwMDAwMDAwLCJ1cGRhdGUiOjI0MDAwMDAwMDAwMH19"
+        }
+      ]
+    },
+    {
+      "mode": "managed",
+      "type": "google_project_iam_policy",
+      "name": "project",
+      "provider": "provider[\"registry.terraform.io/hashicorp/google\"]",
+      "instances": [
+        {
+          "schema_version": 0,
+          "attributes": {
+            "etag": "BwXwHQOmsDI=",
+            "id": "tweet-graphs-330003",
+            "policy_data": "{\"bindings\":[{\"members\":[\"serviceAccount:tweet-graphs@tweet-graphs-330003.iam.gserviceaccount.com\"],\"role\":\"roles/editor\"},{\"members\":[\"user:tdkaraffa@gmail.com\"],\"role\":\"roles/owner\"}]}",
+            "project": "tweet-graphs-330003"
+          },
+          "sensitive_attributes": [
+            [
+              {
+                "type": "get_attr",
+                "value": "project"
+              }
+            ]
+          ],
+          "private": "bnVsbA==",
+          "dependencies": [
+            "data.google_iam_policy.admin",
+            "google_service_account.tweet-graphs"
+          ]
+        }
+      ]
+    },
+    {
+      "mode": "managed",
+      "type": "google_service_account",
+      "name": "tweet-graphs",
+      "provider": "provider[\"registry.terraform.io/hashicorp/google\"]",
+      "instances": [
+        {
+          "schema_version": 0,
+          "attributes": {
+            "account_id": "tweet-graphs",
+            "description": "Service account for Tweet-graphs project.",
+            "disabled": false,
+            "display_name": "tweet-graphs",
+            "email": "tweet-graphs@tweet-graphs-330003.iam.gserviceaccount.com",
+            "id": "projects/tweet-graphs-330003/serviceAccounts/tweet-graphs@tweet-graphs-330003.iam.gserviceaccount.com",
+            "name": "projects/tweet-graphs-330003/serviceAccounts/tweet-graphs@tweet-graphs-330003.iam.gserviceaccount.com",
+            "project": "tweet-graphs-330003",
+            "timeouts": null,
+            "unique_id": "100772799106267730146"
+          },
+          "sensitive_attributes": [
+            [
+              {
+                "type": "get_attr",
+                "value": "project"
+              }
+            ]
+          ],
+          "private": "eyJlMmJmYjczMC1lY2FhLTExZTYtOGY4OC0zNDM2M2JjN2M0YzAiOnsiY3JlYXRlIjozMDAwMDAwMDAwMDB9fQ=="
+        }
+      ]
+    },
+    {
+      "mode": "managed",
+      "type": "google_storage_bucket",
+      "name": "tweets",
+      "provider": "provider[\"registry.terraform.io/hashicorp/google\"]",
+      "instances": [
+        {
+          "schema_version": 0,
+          "attributes": {
+            "bucket_policy_only": true,
+            "cors": [],
+            "default_event_based_hold": false,
+            "encryption": [],
+            "force_destroy": false,
+            "id": "tweets-raw",
+            "labels": {},
+            "lifecycle_rule": [],
+            "location": "US-CENTRAL1",
+            "logging": [],
+            "name": "tweets-raw",
+            "project": "tweet-graphs-330003",
+            "requester_pays": false,
+            "retention_policy": [],
+            "self_link": "https://www.googleapis.com/storage/v1/b/tweets-raw",
+            "storage_class": "STANDARD",
+            "uniform_bucket_level_access": true,
+            "url": "gs://tweets-raw",
+            "versioning": [],
+            "website": []
+          },
+          "sensitive_attributes": [
+            [
+              {
+                "type": "get_attr",
+                "value": "location"
+              }
+            ],
+            [
+              {
+                "type": "get_attr",
+                "value": "project"
+              }
+            ]
+          ],
+          "private": "bnVsbA=="
+        }
+      ]
+    }
+  ],
+  "check_results": null
+}

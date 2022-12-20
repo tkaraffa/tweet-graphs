@@ -61,7 +61,7 @@ class TwitterAPI(APIBase):
         }
 
     def twitter_api_validation(self):
-        """Check that reposnses are good"""
+        """Check that responses are good"""
         pass
 
     @staticmethod

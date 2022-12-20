@@ -17,8 +17,15 @@ variable "zone" {
   type      = string
   sensitive = true
 }
-
-variable "user_email" {
+variable "owner_email" {
   type      = string
   sensitive = true
+}
+variable "user_email" {
+  type      = list(string)
+  sensitive = true
+}
+variable "escape" {
+  type      = string
+  sensitive = false
 }
