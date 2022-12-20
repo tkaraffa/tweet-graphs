@@ -4,7 +4,7 @@ services:
   twitter:
     build:
       context: .
-      dockerfile: twitter_api/Dockerfile
+      dockerfile: Dockerfile
     environment:
       API_KEY: ${API_KEY}
       API_KEY_SECRET: ${API_KEY_SECRET}
