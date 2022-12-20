@@ -6,7 +6,7 @@ resource "google_service_account" "tweet-graphs" {
 }
 
 resource "time_rotating" "key_rotation" {
-  rotation_minutes = 5
+  rotation_minutes = 3600
 }
 
 resource "google_service_account_key" "tweet-graphs-key" {
