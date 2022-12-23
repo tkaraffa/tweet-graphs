@@ -1,11 +1,11 @@
 
-insert into tweets.tweets (
-    id,
-    created_at,
-    filename,
-    test, 
-    test2
-)
+-- insert into tweets.tweets (
+--     id,
+--     created_at,
+--     filename,
+--     test, 
+--     test2
+-- )
 
 select
     generate_uuid() as id,
@@ -15,3 +15,5 @@ select
     test2
 from
     `tweet-graphs-330003`.tweets.raw_tweets
+where
+    contains_substr(_file_name, %(datetime_input)s)
