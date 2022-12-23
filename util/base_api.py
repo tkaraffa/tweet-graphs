@@ -12,7 +12,7 @@ from pathlib import Path
 from util.api_enums import APIEnums, FileFormats
 from util.api_exceptions import ValidationException
 
-from util.gcs_utils import upload_file_to_bucket
+from util.gcp_utils import upload_file_to_bucket
 
 
 class APIBase:
