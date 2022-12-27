@@ -4,10 +4,12 @@ using a user-provided SQL file.
 """
 
 import argparse
+import os
+from pathlib import Path
 import json
 import sqlalchemy as sa
-from util.gcp_utils import get_credentials
-from load.sql_base import SQLBase
+
+from load.bigquery import SQLBigquery
 
 
 def parse_args() -> argparse.Namespace:
@@ -19,13 +21,18 @@ def parse_args() -> argparse.Namespace:
 
 def main():
     args = parse_args()
-    sql = SQLBase()
+    sql = SQLBigquery(query_directory=os.path.join("load", "queries"))
 
     query_file = args.query
     params = args.params
 
-    query = sql.get_query(query_file, **params)
-    sql.engine.execute(query)
+    top_directory = list(Path(__file__).parents)[-2].name
+    query_directory = os.path.join(top_directory, "queries")
+
+    res = sql.execute_query_from_file(
+        query_file, return_results=True, **params
+    )
+    print(list(res))
 
 
 if __name__ == "__main__":
