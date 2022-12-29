@@ -1,6 +1,6 @@
 resource "google_service_account" "tweet-graphs" {
-  account_id   = "tweet-graphs"
-  display_name = "tweet-graphs"
+  account_id   = "tweet-graphs-account"
+  display_name = "tweet-graphs-account"
   project      = var.project
   description  = "Service account for Tweet-graphs project."
 }
