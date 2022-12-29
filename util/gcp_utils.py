@@ -8,10 +8,3 @@ def upload_file_to_bucket(filename, bucket, **kwargs):
     bucket = client.get_bucket(bucket)
     blob = bucket.blob(filename)
     blob.upload_from_filename(filename, **kwargs)
-
-
-def get_credentials():
-    credentials = dict(
-        credentials_path=os.getenv("GOOGLE_APPLICATION_CREDENTIALS")
-    )
-    return credentials
