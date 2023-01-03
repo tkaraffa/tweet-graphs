@@ -4,6 +4,7 @@ import urllib.request
 import urllib.error
 import json
 import csv
+from datetime import datetime, timedelta
 from socket import timeout
 from time import sleep
 from abc import abstractmethod
@@ -123,7 +124,45 @@ class CSVFormat:
         return filename
 
 
-class APIBase(JSONLFormat, CSVFormat):
+class DateFormatter:
+    "Always UTC"
+
+    def __init__(self):
+        super(DateFormatter, self).__init__()
+        self.iso_8601 = "%Y-%M-%d"
+
+    @staticmethod
+    def get_yesterday() -> datetime:
+        "in UTC"
+        return datetime.utcnow().date() - timedelta(1)
+
+    def format_iso_8601(self, date: datetime) -> str:
+        return date.strftime(self.iso_8601)
+
+    @staticmethod
+    def check_date_format(date: str, fmt: str) -> str:
+        try:
+            new_date = datetime.strptime(date, fmt)
+            new_date.strftime(fmt)
+            return date
+        except:
+            raise ValueError(f"Not the right date format! Expected {fmt}.")
+
+    def check_iso_8601(self, date: str) -> str:
+        return self.check_date_format(date, self.iso_8601)
+
+    @staticmethod
+    def add_start_of_day_time(date: str) -> str:
+        "Adds midnight to a date string"
+        return f"{date}T00:00:00Z"
+
+    @staticmethod
+    def add_end_of_day_time(date: str) -> str:
+        "Adds 11:59PM to a date string"
+        return f"{date}T23:59:59Z"
+
+
+class APIBase(JSONLFormat, CSVFormat, DateFormatter):
     """
     General-purpose class for making API requests.
     """
@@ -166,6 +205,7 @@ class APIBase(JSONLFormat, CSVFormat):
         headers: dict = None,
         payload: dict = None,
         params: dict = None,
+        safe: str = None,
     ) -> urllib.request.Request:
         """
         Construct a request with optional payload
@@ -175,12 +215,15 @@ class APIBase(JSONLFormat, CSVFormat):
         netloc = host
         path = endpoint
         params = params
-        query = urllib.parse.urlencode(query, doseq=True) if query else None
+        query = (
+            urllib.parse.urlencode(query, safe=safe, doseq=True)
+            if query
+            else None
+        )
         fragment = None
         url = urllib.parse.urlunparse(
             (scheme, netloc, path, params, query, fragment)
         )
-
         request = urllib.request.Request(
             url, headers=headers, data=self._encode_payload(payload)
         )
