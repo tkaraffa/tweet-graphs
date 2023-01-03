@@ -1,3 +1,4 @@
+from typing import Callable, Union
 import urllib.parse
 import urllib.request
 import urllib.error
@@ -15,8 +16,121 @@ from util.api_exceptions import ValidationException
 from util.gcp_utils import upload_file_to_bucket
 
 
-class APIBase:
+class JSONLFormat:
+    """
+    Mixin to add functionality for writing data to JSON files.
+    """
+
+    def __init__(self):
+        super(JSONLFormat, self).__init__()
+        self.jsonl_file_format = FileFormats.JSONL.value
+        self.file_format_functions[
+            self.jsonl_file_format
+        ] = self._write_jsonl_file
+
+    @staticmethod
+    def _write_jsonl_file(data: list, filename: str) -> None:
+        """
+        Write data to a .jsonl file
+
+        Paramters
+        ---------
+        data: list
+            List of JSONL data to write
+        filename: str
+            Filename to write
+        """
+        with open(filename, "w+") as f:
+            for line in data:
+                json.dump(line, f)
+                f.write("\n")
+
+    @staticmethod
+    def check_jsonl(filename: str) -> str:
+        """
+        Check that a file has the extension .jsonl
+
+        Parameters
+        ---------
+        filename: str
+            The filename to check
+
+        Returns
+        -------
+        filename: str
+
+        Raises
+        ------
+        TypeError
+            if not a .jsonl file
+        """
+        if not filename.endswith(FileFormats.JSONL.value):
+            raise TypeError(
+                f"Please use {FileFormats.JSONL.value} file extension."
+            )
+        return filename
+
+
+class CSVFormat:
+    """
+    Mixin to add functionality for writing data to CSV files.
+    """
+
+    def __init__(self):
+        super(CSVFormat, self).__init__()
+        self.csv_file_format = FileFormats.CSV.value
+        self.file_format_functions[self.csv_file_format] = self._write_csv_file
+
+    @staticmethod
+    def _write_csv_file(data: list, filename: str) -> None:
+        """
+        Write data to a .csv file
+
+        Paramters
+        ---------
+        data: list
+            List of CSV data to write
+        filename: str
+            Filename to write
+        """
+        with open(filename, "w+") as f:
+            writer = csv.writer(f)
+            writer.writerows(data)
+
+    @staticmethod
+    def check_csv(filename: str) -> str:
+        """
+        Check that a file has the extension .csv
+
+        Parameters
+        ---------
+        filename: str
+            The filename to check
+
+        Returns
+        -------
+        filename: str
+
+        Raises
+        ------
+        TypeError
+            if not a .csv file
+        """
+        if not filename.endswith(FileFormats.CSV.value):
+            raise TypeError(
+                f"Please use {FileFormats.CSV.value} file extension."
+            )
+        return filename
+
+
+class APIBase(JSONLFormat, CSVFormat):
+    """
+    General-purpose class for making API requests.
+    """
+
     def __init__(self) -> None:
+        self.file_format_functions = dict()
+        super(APIBase, self).__init__()
         self.exception = (
             urllib.error.HTTPError,
             urllib.error.URLError,
@@ -30,51 +144,33 @@ class APIBase:
 
         self.scheme = APIEnums.SCHEME.value
 
-        self.file_formats = self.file_format_functions()
-
-    def file_format_functions(self):
-        """When a new file fomatted is added, it must be added in several places:
-        * in api_enums.py in FileFormats
-        * in this file in a _write_<file_format>_file method
-        * in this function's format_functions dictionary
-        """
-        formats = {i.value for i in FileFormats}
-        format_functions = {
-            FileFormats.CSV.value: self._write_csv_file,
-            FileFormats.JSON.value: self._write_json_file,
-        }
-
-        not_implemented = formats.symmetric_difference(set(format_functions))
-        if not_implemented:
-            raise NotImplementedError(
-                "Some formats do not have write functions implemented:"
-                f"{', '.join(list(not_implemented))}"
-            )
-        return format_functions
-
     @abstractmethod
-    def validation_function(self, response):
-        """Abstract method for API-specific validation functions."""
+    def validation_function(
+        self, response: urllib.request.Request
+    ) -> urllib.request.Request:
+        "Abstract method for API-specific validation functions."
         return response
 
     @staticmethod
-    def _encode_payload(payload=None):
+    def _encode_payload(payload: dict = None) -> str:
+        "Encodes payload for a request."
         if payload is not None:
             return json.dumps(payload).encode("utf-8")
 
-    def format_url():
-        pass
-
     def create_request(
         self,
-        host,
-        endpoint,
-        scheme=None,
-        query=None,
-        headers=None,
-        payload=None,
-        params=None,
-    ):
+        host: str,
+        endpoint: str,
+        scheme: str = None,
+        query: str = None,
+        headers: dict = None,
+        payload: dict = None,
+        params: dict = None,
+    ) -> urllib.request.Request:
+        """
+        Construct a request with optional payload
+
+        """
         scheme = scheme or self.scheme
         netloc = host
         path = endpoint
@@ -90,13 +186,27 @@ class APIBase:
         )
         return request
 
-    def _send_request(self, request):
-        timeout = self.timeout
-        with urllib.request.urlopen(request, timeout=timeout) as r:
+    def _send_request(self, request: urllib.request.Request) -> str:
+        """
+        Attempt to open a request, with the instantiated timeout
+
+        Paramters
+        ---------
+        request: urllib.request.Request
+            The request to try
+
+        Returns
+        -------
+        data: str
+            The decoded data from the request
+        """
+        with urllib.request.urlopen(request, timeout=self.timeout) as r:
             data = r.read().decode()
         return data
 
-    def _retry_request(self, func, url, **kwargs):
+    def _retry_request(
+        self, func: Callable, url: str, **kwargs
+    ) -> Union[str, None]:
         tries = self.tries
         logger = self.logger
         delay = self.delay
@@ -105,9 +215,11 @@ class APIBase:
         while tries > 1:
             try:
                 result = func(url, **kwargs)
-                if self.validation_func is not None:
-                    if self.validation_func(result) is not True:
-                        raise self.ValidationException
+                if (
+                    self.validation_func is not None
+                    and self.validation_func(result) is True
+                ):
+                    raise ValidationException
                 return result
             except Exception as e:
                 if isinstance(e, ValidationException):
@@ -121,33 +233,24 @@ class APIBase:
                 tries -= 1
                 delay *= backoff
 
-    def pull_request_data(self, request, **kwargs):
+    def pull_request_data(
+        self, request: urllib.request.Request, **kwargs
+    ) -> str:
         data = self._retry_request(self._send_request, request, **kwargs)
         return data
 
-    @staticmethod
-    def _write_json_file(data, filename):
-        with open(filename, "w+") as f:
-            for line in data:
-                json.dump(line, f)
-                f.write("\n")
-
-    @staticmethod
-    def _write_csv_file(data, filename):
-        with open(filename, "w+") as f:
-            writer = csv.writer(f)
-            writer.writerows(data)
-
-    def write_and_upload(self, data, filename, bucket, **kwargs):
-
+    def write_and_upload(
+        self, data: list, filename: str, bucket: str, **kwargs
+    ) -> None:
         file_extension = Path(filename).suffix
-        write_func = self.file_formats.get(file_extension)
-        if not write_func:
+        try:
+            write_func = self.file_format_functions[file_extension]
+            write_func(data=data, filename=filename)
+            upload_file_to_bucket(filename, bucket, **kwargs)
+        except KeyError:
             raise NotImplementedError(
                 f"Type {type} is not implemented yet. "
-                f"Only {', '.join(self.file_formats)} are supported."
+                f"Only {', '.join(self.file_format_functions)} are supported."
             )
-
-        write_func(data=data, filename=filename)
-        upload_file_to_bucket(filename, bucket, **kwargs)
-        os.remove(filename)
+        finally:
+            os.remove(filename)

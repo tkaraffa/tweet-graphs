@@ -7,4 +7,4 @@ class APIEnums(Enum):
 
 class FileFormats(Enum):
     CSV = ".csv"
-    JSON = ".json"
+    JSONL = ".jsonl"
