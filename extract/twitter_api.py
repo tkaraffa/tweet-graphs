@@ -21,6 +21,7 @@ class TwitterAPI(APIBase):
     def __init__(
         self,
         query: str,
+        date: str,
         bearer_token: str = None,
         api_key: str = None,
         api_key_secret: str = None,
@@ -30,6 +31,7 @@ class TwitterAPI(APIBase):
     ) -> None:
         super().__init__()
         self.query = query
+        self.date = date
 
         self.max_results = (
             max_results
@@ -49,12 +51,7 @@ class TwitterAPI(APIBase):
         self.next_token = TwitterAPIDefaults.NEXT_TOKEN.value
 
         self.results = list()
-        self.filename = (
-            self.query
-            + "_"
-            + datetime.strftime(datetime.now(), "%Y%m%d")
-            + self.jsonl_file_format
-        )
+        self.filename = f"{self.query}_{self.date}{self.jsonl_file_format}"
 
     @property
     def headers(self) -> dict:
@@ -88,6 +85,8 @@ class TwitterAPI(APIBase):
             "tweet.fields": tweet_fields,
             "user.fields": user_fields,
             "max_results": self.max_results,
+            "start_time": self.add_start_of_day_time(self.date),
+            "end_time": self.add_end_of_day_time(self.date),
         }
         return query_dict
 
@@ -95,22 +94,36 @@ class TwitterAPI(APIBase):
         """Check that responses are good"""
         self.data in json.loads(response).keys()
 
-    def perform_search(self, next_token=None) -> dict:
+    def perform_search(
+        self, endpoint: str = "search_recent", next_token=None
+    ) -> dict:
         if next_token is not None:
             self.query_dict["next_token"] = next_token
         search_request = self.create_request(
             host=self.host,
-            endpoint=self.endpoints.get("search"),
+            endpoint=self.endpoints.get(endpoint),
             scheme=self.scheme,
             query=self.query_dict,
+            # params=self.parameters,
             headers=self.headers,
+            safe=":",
         )
         data = self.pull_request_data(search_request)
         return json.loads(data)
 
     def paginate_tweets(self, n_pages=5) -> None:
-        next_token = None
-        for _ in range(n_pages):
+        page_count = 1
+
+        # always check the first page at least, and keep even if 0 results
+        first_result = self.perform_search()
+        self.results.append(first_result)
+        next_token = first_result.get(self.meta).get(self.next_token)
+
+        # only get extra pages if there is another page
+        # and if max pages not exceeded
+        while next_token is not None and page_count < n_pages:
+            page_count += 1
+
             page_results = self.perform_search(next_token=next_token)
             self.results.append(page_results)
             next_token = page_results.get(self.meta).get(self.next_token)

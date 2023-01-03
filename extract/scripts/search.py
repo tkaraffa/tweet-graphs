@@ -1,9 +1,13 @@
 import argparse
 
 from extract.twitter_api import TwitterAPI
+from util.base_api import DateFormatter
 
 
 def get_args():
+
+    date_formatter = DateFormatter()
+
     parser = argparse.ArgumentParser(
         prog="search.py",
         description="Search for Tweets based on a term.",
@@ -12,6 +16,13 @@ def get_args():
         "query",
         type=str,
         help="The search term.",
+    )
+    parser.add_argument(
+        "--date",
+        type=date_formatter.check_iso_8601,
+        help="ISO 8601 formatted date.",
+        default=date_formatter.get_yesterday(),
+        required=False,
     )
     parser.add_argument(
         "--n_pages",
@@ -32,10 +43,11 @@ def get_args():
 def search():
     args = get_args()
     query = args.query
+    date = args.date
     n_pages = args.n_pages
     bucket = args.bucket
 
-    twitter = TwitterAPI(query)
+    twitter = TwitterAPI(query, date)
 
     twitter.paginate_tweets(n_pages=n_pages)
     twitter.write_and_upload(twitter.results, twitter.filename, bucket)

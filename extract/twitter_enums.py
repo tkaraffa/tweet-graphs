@@ -13,7 +13,8 @@ class TwitterURLs(Enum):
 
 
 class TwitterEndpoints(Enum):
-    SEARCH = "tweets/search/recent"
+    SEARCH_RECENT = "tweets/search/recent"
+    SEARCH_ALL = "tweets/search/all"
 
 
 class TweetExpansions(Enum):
