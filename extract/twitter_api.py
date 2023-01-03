@@ -112,5 +112,5 @@ class TwitterAPI(APIBase):
         next_token = None
         for _ in range(n_pages):
             page_results = self.perform_search(next_token=next_token)
-            self.results.extend(page_results.get(self.data))
+            self.results.append(page_results)
             next_token = page_results.get(self.meta).get(self.next_token)
