@@ -1,4 +1,6 @@
 from typing import Optional, Union, Callable, Dict
+import logging
+import sys
 import os
 from pathlib import Path
 from abc import abstractmethod
@@ -69,14 +71,29 @@ class PyQuery:
         return module.query
 
 
-class SQLBase(ABC, SQLQuery, PyQuery):
+class SQLBase(ABC):
     def __init__(self, query_directory=None, conn_string=None):
         self.query_directory: Optional[str] = query_directory
         self.conn_string: Optional[str] = conn_string
 
         self.query_execute_functions = dict()
         self.query_find_functions = dict()
+
         super(SQLBase, self).__init__()
+
+    @property
+    def logger(self):
+        logger = logging.getLogger()
+        logger.setLevel(logging.DEBUG)
+
+        handler = logging.StreamHandler(sys.stdout)
+        handler.setLevel(logging.DEBUG)
+        formatter = logging.Formatter(
+            "%(asctime)s - %(name)s - %(levelname)s - %(message)s"
+        )
+        handler.setFormatter(formatter)
+        logger.handlers = [handler]
+        return logger
 
     @property
     @abstractmethod
@@ -127,6 +144,14 @@ class SQLBase(ABC, SQLQuery, PyQuery):
                 + f"Check {self.query_directory} for your file."
             )
 
+    def log_query(self, query, kwargs):
+        self.logger.info(f"{'Executing Query':-^40}")
+        self.logger.info(str(query))
+        self.logger.info(f"{'With Parameters':-^40}")
+        for key, value in kwargs.items():
+            self.logger.info(f"{key}: {value}")
+        self.logger.info(f"{'':-^40}")
+
     def execute_query_from_file(
         self, query_file: str, return_results: Optional[bool] = False, **kwargs
     ) -> Optional[LegacyCursorResult]:
@@ -150,10 +175,11 @@ class SQLBase(ABC, SQLQuery, PyQuery):
         )
 
         query = find_query_function(full_file_path)
+        self.log_query(query, kwargs)
 
         results = execute_query_function(query, **kwargs)
         if return_results is True:
-            return results
+            return results.fetchall()
 
     def _get_query_function(
         self, full_file_path: str, functions: dict
@@ -180,4 +206,13 @@ class SQLBase(ABC, SQLQuery, PyQuery):
         return self._get_query_function(
             full_file_path,
             self.query_execute_functions,
+        )
+
+    def reflect_table(self, table_name, schema_name):
+        return sa.Table(
+            table_name,
+            sa.MetaData(),
+            schema=schema_name,
+            autoload=True,
+            autoload_with=self.engine,
         )

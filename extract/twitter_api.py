@@ -94,9 +94,7 @@ class TwitterAPI(APIBase):
         """Check that responses are good"""
         self.data in json.loads(response).keys()
 
-    def perform_search(
-        self, endpoint: str = "search_recent", next_token=None
-    ) -> dict:
+    def perform_search(self, endpoint: str = "search_recent", next_token=None) -> dict:
         if next_token is not None:
             self.query_dict["next_token"] = next_token
         search_request = self.create_request(

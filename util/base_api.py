@@ -25,9 +25,7 @@ class JSONLFormat:
     def __init__(self):
         super(JSONLFormat, self).__init__()
         self.jsonl_file_format = FileFormats.JSONL.value
-        self.file_format_functions[
-            self.jsonl_file_format
-        ] = self._write_jsonl_file
+        self.file_format_functions[self.jsonl_file_format] = self._write_jsonl_file
 
     @staticmethod
     def _write_jsonl_file(data: list, filename: str) -> None:
@@ -66,9 +64,7 @@ class JSONLFormat:
             if not a .jsonl file
         """
         if not filename.endswith(FileFormats.JSONL.value):
-            raise TypeError(
-                f"Please use {FileFormats.JSONL.value} file extension."
-            )
+            raise TypeError(f"Please use {FileFormats.JSONL.value} file extension.")
         return filename
 
 
@@ -118,9 +114,7 @@ class CSVFormat:
             if not a .csv file
         """
         if not filename.endswith(FileFormats.CSV.value):
-            raise TypeError(
-                f"Please use {FileFormats.CSV.value} file extension."
-            )
+            raise TypeError(f"Please use {FileFormats.CSV.value} file extension.")
         return filename
 
 
@@ -215,15 +209,9 @@ class APIBase(JSONLFormat, CSVFormat, DateFormatter):
         netloc = host
         path = endpoint
         params = params
-        query = (
-            urllib.parse.urlencode(query, safe=safe, doseq=True)
-            if query
-            else None
-        )
+        query = urllib.parse.urlencode(query, safe=safe, doseq=True) if query else None
         fragment = None
-        url = urllib.parse.urlunparse(
-            (scheme, netloc, path, params, query, fragment)
-        )
+        url = urllib.parse.urlunparse((scheme, netloc, path, params, query, fragment))
         request = urllib.request.Request(
             url, headers=headers, data=self._encode_payload(payload)
         )
@@ -247,9 +235,7 @@ class APIBase(JSONLFormat, CSVFormat, DateFormatter):
             data = r.read().decode()
         return data
 
-    def _retry_request(
-        self, func: Callable, url: str, **kwargs
-    ) -> Union[str, None]:
+    def _retry_request(self, func: Callable, url: str, **kwargs) -> Union[str, None]:
         tries = self.tries
         logger = self.logger
         delay = self.delay
@@ -266,7 +252,9 @@ class APIBase(JSONLFormat, CSVFormat, DateFormatter):
                 return result
             except Exception as e:
                 if isinstance(e, ValidationException):
-                    message = f"{self.validation_func.__doc__}. Retrying in {delay} seconds."
+                    message = (
+                        f"{self.validation_func.__doc__}. Retrying in {delay} seconds."
+                    )
                 else:
                     message = f"{str(e)}. Retrying in {delay} seconds."
                 print(message)
@@ -276,9 +264,7 @@ class APIBase(JSONLFormat, CSVFormat, DateFormatter):
                 tries -= 1
                 delay *= backoff
 
-    def pull_request_data(
-        self, request: urllib.request.Request, **kwargs
-    ) -> str:
+    def pull_request_data(self, request: urllib.request.Request, **kwargs) -> str:
         data = self._retry_request(self._send_request, request, **kwargs)
         return data
 
