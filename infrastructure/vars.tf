@@ -32,3 +32,8 @@ variable "escape" {
   type      = string
   sensitive = false
 }
+
+variable "deletion_protection" {
+  type      = bool
+  sensitive = false
+}
