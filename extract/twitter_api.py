@@ -4,6 +4,7 @@ from datetime import datetime
 
 from util.base_api import APIBase
 from util.api_exceptions import ValidationException
+from util.file_formats import JSONLFormat
 from extract.twitter_enums import (
     TweetMediaFields,
     TweetPlaceFields,
@@ -17,7 +18,7 @@ from extract.twitter_enums import (
 )
 
 
-class TwitterAPI(APIBase):
+class TwitterAPI(APIBase, JSONLFormat):
     def __init__(
         self,
         query: str,
@@ -94,7 +95,9 @@ class TwitterAPI(APIBase):
         """Check that responses are good"""
         self.data in json.loads(response).keys()
 
-    def perform_search(self, endpoint: str = "search_recent", next_token=None) -> dict:
+    def perform_search(
+        self, endpoint: str = "search_recent", next_token=None
+    ) -> dict:
         if next_token is not None:
             self.query_dict["next_token"] = next_token
         search_request = self.create_request(
