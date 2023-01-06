@@ -1,74 +1,12 @@
-from typing import Optional, Union, Callable, Dict
+from typing import Optional, Union, Callable
 import logging
 import sys
 import os
 from pathlib import Path
-from abc import abstractmethod
+from abc import ABC, abstractmethod
 from pydoc import locate
 import sqlalchemy as sa
-from sqlalchemy.engine.cursor import LegacyCursorResult
-from pydantic import BaseModel
-from abc import ABC
-import importlib.util
 import sys
-from load.sql_enums import FileTypes
-
-"""
-execute string query
-execute sqlalchemy query
-
-get query from .sql file
-get query from .py file - `query` function
-
-"""
-
-
-class SQLQuery:
-    """
-    Mixin with methods for executing queries from .sql files
-    """
-
-    def __init__(self):
-        super(SQLQuery, self).__init__()
-        self.filetype = FileTypes.SQL.value
-        self.query_execute_functions[self.filetype] = self._execute_sql_query
-        self.query_find_functions[self.filetype] = self._find_sql_query
-
-    def _execute_sql_query(self, query: str, **kwargs):
-        with self.engine.connect() as conn:
-            result = conn.execute(query, **kwargs)
-        return result
-
-    @staticmethod
-    def _find_sql_query(file_path: str):
-        with open(file_path, "r") as f:
-            query = sa.text(f.read())
-        return query
-
-
-class PyQuery:
-    """
-    Mixin with methods for executing queries from .py files
-    """
-
-    def __init__(self):
-        super(PyQuery, self).__init__()
-        self.filetype = FileTypes.PY.value
-        self.query_execute_functions[self.filetype] = self._execute_py_query
-        self.query_find_functions[self.filetype] = self._find_py_query
-
-    def _execute_py_query(self, query: sa.select, **kwargs):
-        with self.engine.connect() as conn:
-            result = conn.execute(query(**kwargs))
-        return result
-
-    @staticmethod
-    def _find_py_query(file_path: str) -> sa.select:
-        spec = importlib.util.spec_from_file_location("query", file_path)
-        module = importlib.util.module_from_spec(spec)
-        sys.modules["query"] = module
-        spec.loader.exec_module(module)
-        return module.query
 
 
 class SQLBase(ABC):
@@ -154,7 +92,7 @@ class SQLBase(ABC):
 
     def execute_query_from_file(
         self, query_file: str, return_results: Optional[bool] = False, **kwargs
-    ) -> Optional[LegacyCursorResult]:
+    ) -> Optional[list[tuple]]:
         """
         Execute a query from its file, optionally returning the resulting
         cursor object.
@@ -177,7 +115,7 @@ class SQLBase(ABC):
         query = find_query_function(full_file_path)
         self.log_query(query, kwargs)
 
-        results = execute_query_function(query, **kwargs)
+        results = execute_query_function(self.engine, query, **kwargs)
         if return_results is True:
             return results.fetchall()
 
