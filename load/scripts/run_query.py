@@ -7,8 +7,7 @@ import argparse
 import os
 from pathlib import Path
 import json
-import sqlalchemy as sa
-import logging
+
 from load.bigquery import SQLBigquery
 
 
@@ -22,7 +21,6 @@ def parse_args() -> argparse.Namespace:
 
 def main():
     args = parse_args()
-    sql = SQLBigquery(query_directory=os.path.join("load", "queries"))
 
     query_file = args.query
     params = args.params
@@ -30,6 +28,7 @@ def main():
 
     top_directory = list(Path(__file__).parents)[-2].name
     query_directory = os.path.join(top_directory, "queries")
+    sql = SQLBigquery(query_directory=query_directory)
 
     res = sql.execute_query_from_file(
         query_file, return_results=return_results, **params

@@ -1,7 +1,7 @@
 import os
 
 from load.sql_base import SQLBase
-from load.query import SQLQuery, PyQuery
+from load.query import SQLQuery
 from load.sql_enums import ConnectionStrings
 
 

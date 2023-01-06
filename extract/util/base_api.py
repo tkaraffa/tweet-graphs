@@ -3,66 +3,25 @@ import urllib.parse
 import urllib.request
 import urllib.error
 import json
-import csv
-from datetime import datetime, timedelta
 from socket import timeout
 from time import sleep
-from abc import abstractmethod
+from abc import ABC, abstractmethod
 import os
 from pathlib import Path
 
-from util.api_enums import APIEnums
-from util.api_exceptions import ValidationException
-
-from util.gcp_utils import upload_file_to_bucket
-
-
-class DateFormatter:
-    "Always UTC"
-
-    def __init__(self):
-        super(DateFormatter, self).__init__()
-        self.iso_8601 = "%Y-%M-%d"
-
-    @staticmethod
-    def get_yesterday() -> datetime:
-        "in UTC"
-        return datetime.utcnow().date() - timedelta(1)
-
-    def format_iso_8601(self, date: datetime) -> str:
-        return date.strftime(self.iso_8601)
-
-    @staticmethod
-    def check_date_format(date: str, fmt: str) -> str:
-        try:
-            new_date = datetime.strptime(date, fmt)
-            new_date.strftime(fmt)
-            return date
-        except:
-            raise ValueError(f"Not the right date format! Expected {fmt}.")
-
-    def check_iso_8601(self, date: str) -> str:
-        return self.check_date_format(date, self.iso_8601)
-
-    @staticmethod
-    def add_start_of_day_time(date: str) -> str:
-        "Adds midnight to a date string"
-        return f"{date}T00:00:00Z"
-
-    @staticmethod
-    def add_end_of_day_time(date: str) -> str:
-        "Adds 11:59PM to a date string"
-        return f"{date}T23:59:59Z"
+from extract.util.api_enums import APIEnums
+from extract.util.api_exceptions import ValidationException
+from extract.util.dates import DateFormatter
+from extract.util.gcp_utils import upload_file_to_bucket
 
 
-class APIBase(DateFormatter):
+class APIBase(ABC, DateFormatter):
     """
     General-purpose class for making API requests.
     """
 
     def __init__(self) -> None:
         self.file_format_functions = dict()
-        super(APIBase, self).__init__()
         self.exception = (
             urllib.error.HTTPError,
             urllib.error.URLError,
@@ -75,6 +34,7 @@ class APIBase(DateFormatter):
         self.timeout = 15
 
         self.scheme = APIEnums.SCHEME.value
+        super(APIBase, self).__init__()
 
     @abstractmethod
     def validation_function(
@@ -159,7 +119,10 @@ class APIBase(DateFormatter):
                 return result
             except Exception as e:
                 if isinstance(e, ValidationException):
-                    message = f"{self.validation_func.__doc__}. Retrying in {delay} seconds."
+                    message = (
+                        f"{self.validation_func.__doc__}. "
+                        + "Retrying in {delay} seconds."
+                    )
                 else:
                     message = f"{str(e)}. Retrying in {delay} seconds."
                 print(message)

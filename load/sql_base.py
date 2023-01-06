@@ -1,12 +1,11 @@
-from typing import Optional, Union, Callable
+from typing import Optional, Callable
 import logging
 import sys
 import os
 from pathlib import Path
 from abc import ABC, abstractmethod
-from pydoc import locate
+
 import sqlalchemy as sa
-import sys
 
 
 class SQLBase(ABC):
