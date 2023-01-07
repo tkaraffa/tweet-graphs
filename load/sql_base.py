@@ -1,25 +1,36 @@
-from typing import Optional, Callable
+from typing import Optional, Callable, List, Tuple, Dict, Union
 import logging
 import sys
 import os
 from pathlib import Path
 from abc import ABC, abstractmethod
+from dataclasses import dataclass, field
 
 import sqlalchemy as sa
 
+from load.query import SQLQuery, PyQuery, Query
 
+
+@dataclass
 class SQLBase(ABC):
-    def __init__(self, query_directory=None, conn_string=None):
-        self.query_directory: Optional[str] = query_directory
-        self.conn_string: Optional[str] = conn_string
-
-        self.query_execute_functions = dict()
-        self.query_find_functions = dict()
-
-        super(SQLBase, self).__init__()
+    query_directory: Optional[str] = field(default_factory=str)
+    conn_string: Optional[str] = field(default_factory=str)
 
     @property
-    def logger(self):
+    @abstractmethod
+    def _credentials(self) -> None:
+        """
+        Abstact property to be implemented in child classes.
+        Client-specific credentials/configurations for connecting
+        to database.
+        """
+
+    @property
+    def queriers(self) -> Dict[str, Query]:
+        return {query.filetype: query() for query in {SQLQuery, PyQuery}}
+
+    @property
+    def logger(self) -> logging.Logger:
         logger = logging.getLogger()
         logger.setLevel(logging.DEBUG)
 
@@ -31,16 +42,6 @@ class SQLBase(ABC):
         handler.setFormatter(formatter)
         logger.handlers = [handler]
         return logger
-
-    @property
-    @abstractmethod
-    def _credentials(self) -> None:
-        """
-        Abstact property to be implemented in child classes.
-        Client-specific credentials/configurations for connecting
-        to database.
-        """
-        pass
 
     @property
     def engine(self) -> sa.engine.base.Engine:
@@ -65,33 +66,33 @@ class SQLBase(ABC):
         ----------
         query_file: str
             Name of the file containing the query to validate.
-        """
-        file_path = Path(query_file)
-        # make sure file exists and has valid extension
-        if file_path.suffix not in self.query_find_functions:
-            raise NotImplementedError(
-                f"You used a {file_path.suffix} file. "
-                + "Use one of the following filetypes:\n"
-                + f"{', '.join(list(self.query_find_functions))}"
-            )
 
-        if not os.path.exists(query_file):
+        Raises
+        ------
+        FileNotFoundError:
+            if file does not exist in the instantiated query directory
+
+        NotImplementedError
+            if file is of an unsupported type
+        """
+        full_file_path = os.path.join(self.query_directory, query_file)
+        file_suffix = Path(query_file).suffix
+        # make sure file exists and has valid extension
+        if not os.path.exists(full_file_path):
             raise FileNotFoundError(
-                f"{query_file} does not exist!"
+                f"{full_file_path} does not exist!"
                 + f"Check {self.query_directory} for your file."
             )
-
-    def log_query(self, query, kwargs):
-        self.logger.info(f"{'Executing Query':-^40}")
-        self.logger.info(str(query))
-        self.logger.info(f"{'With Parameters':-^40}")
-        for key, value in kwargs.items():
-            self.logger.info(f"{key}: {value}")
-        self.logger.info(f"{'':-^40}")
+        if file_suffix not in self.queriers:
+            raise NotImplementedError(
+                f"You used a {file_suffix} file. "
+                + "Use one of the following filetypes:\n"
+                + f"{', '.join(self.queriers)}"
+            )
 
     def execute_query_from_file(
         self, query_file: str, return_results: Optional[bool] = False, **kwargs
-    ) -> Optional[list[tuple]]:
+    ) -> Optional[List[Tuple]]:
         """
         Execute a query from its file, optionally returning the resulting
         cursor object.
@@ -106,44 +107,16 @@ class SQLBase(ABC):
 
         """
         full_file_path = os.path.join(self.query_directory, query_file)
-        find_query_function = self.get_find_query_function(full_file_path)
-        execute_query_function = self.get_execute_query_function(
-            full_file_path
-        )
+        file_suffix = Path(query_file).suffix
 
-        query = find_query_function(full_file_path)
-        self.log_query(query, kwargs)
+        querier = self.queriers.get(file_suffix)
+        query = querier.find_query(full_file_path)
 
-        results = execute_query_function(self.engine, query, **kwargs)
+        self.log_query(query, **kwargs)
+
+        results = querier.execute_query(self.engine, query, **kwargs)
         if return_results is True:
             return results.fetchall()
-
-    def _get_query_function(
-        self, full_file_path: str, functions: dict
-    ) -> Callable:
-        """
-        Prototype function for getting filetype-sepcific
-        """
-        self.validate_query_file(full_file_path)
-        file_suffix = Path(full_file_path).suffix
-        query_function = functions[file_suffix]
-        return query_function
-
-    def get_find_query_function(self, full_file_path: str) -> Callable:
-        """
-        Return a function to execute a query based on its filetype
-        Also validate the query file
-        """
-        return self._get_query_function(
-            full_file_path,
-            self.query_find_functions,
-        )
-
-    def get_execute_query_function(self, full_file_path: str):
-        return self._get_query_function(
-            full_file_path,
-            self.query_execute_functions,
-        )
 
     def reflect_table(self, table_name, schema_name):
         return sa.Table(
@@ -153,3 +126,18 @@ class SQLBase(ABC):
             autoload=True,
             autoload_with=self.engine,
         )
+
+    def log_query(
+        self, query: Union[sa.sql.elements.TextClause, Callable], **kwargs
+    ) -> None:
+        self.logger.info(f"{'Executing Query':-^40}")
+        if isinstance(query, sa.sql.elements.TextClause):
+            self.logger.info(str(query))
+        elif isinstance(query, Callable):
+            self.logger.info(str(query()))
+
+        # self.logger.info(str(query))
+        self.logger.info(f"{'With Parameters':-^40}")
+        for key, value in kwargs.items():
+            self.logger.info(f"{key}: {value}")
+        self.logger.info(f"{'':-^40}")
