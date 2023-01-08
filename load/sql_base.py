@@ -3,7 +3,7 @@ import logging
 import sys
 import os
 from pathlib import Path
-from abc import ABC, abstractmethod
+from abc import ABC
 from dataclasses import dataclass, field
 
 import sqlalchemy as sa
@@ -13,17 +13,9 @@ from load.query import SQLQuery, PyQuery, Query
 
 @dataclass
 class SQLBase(ABC):
+    conn_string: str
+    credentials: dict
     query_directory: Optional[str] = field(default_factory=str)
-    conn_string: Optional[str] = field(default_factory=str)
-
-    @property
-    @abstractmethod
-    def _credentials(self) -> None:
-        """
-        Abstact property to be implemented in child classes.
-        Client-specific credentials/configurations for connecting
-        to database.
-        """
 
     @property
     def queriers(self) -> Dict[str, Query]:
@@ -49,7 +41,7 @@ class SQLBase(ABC):
         Property for executing SQL queries, either
         string representations or SQLAlchemy select objects.
         """
-        return sa.engine.create_engine(self.conn_string, **self._credentials)
+        return sa.engine.create_engine(self.conn_string, **self.credentials)
 
     def validate_query_file(self, query_file: str) -> None:
         """
@@ -91,7 +83,10 @@ class SQLBase(ABC):
             )
 
     def execute_query_from_file(
-        self, query_file: str, return_results: Optional[bool] = False, **kwargs
+        self,
+        query_file: str,
+        return_results: Optional[bool] = False,
+        **kwargs,
     ) -> Optional[List[Tuple]]:
         """
         Execute a query from its file, optionally returning the resulting
@@ -128,7 +123,9 @@ class SQLBase(ABC):
         )
 
     def log_query(
-        self, query: Union[sa.sql.elements.TextClause, Callable], **kwargs
+        self,
+        query: Union[sa.sql.elements.TextClause, Callable],
+        **kwargs,
     ) -> None:
         self.logger.info(f"{'Executing Query':-^40}")
         if isinstance(query, sa.sql.elements.TextClause):
