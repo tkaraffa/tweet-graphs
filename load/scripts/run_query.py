@@ -5,7 +5,6 @@ using a user-provided .sql or .py file.
 
 import argparse
 import os
-from pathlib import Path
 import json
 
 from load.bigquery import SQLBigquery
@@ -40,8 +39,7 @@ def main():
     params = args.params
     return_results = args.return_results
 
-    top_directory = list(Path(__file__).parents)[-2].name
-    query_directory = os.path.join(top_directory, "queries")
+    query_directory = os.path.join("load", "queries")
     sql = SQLBigquery(query_directory=query_directory)
 
     res = sql.execute_query_from_file(
