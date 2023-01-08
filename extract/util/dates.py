@@ -1,36 +1,38 @@
-from datetime import datetime, timedelta
+from dataclasses import dataclass
+from datetime import datetime, timedelta, date
 
 
+@dataclass(frozen=True)
 class DateFormatter:
     "Always UTC"
 
-    def __init__(self):
-        super(DateFormatter, self).__init__()
-        self.iso_8601 = "%Y-%M-%d"
+    @property
+    def iso_8601(self):
+        return "%Y-%M-%d"
 
     @staticmethod
-    def get_yesterday() -> datetime:
+    def get_yesterday() -> date:
         "in UTC"
         return datetime.utcnow().date() - timedelta(1)
 
-    def format_iso_8601(self, date: datetime) -> str:
-        return date.strftime(self.iso_8601)
+    def format_iso_8601(self, dt: datetime) -> str:
+        return dt.strftime(self.iso_8601)
 
     @staticmethod
-    def check_date_format(date: str, fmt: str) -> str:
-        new_date = datetime.strptime(date, fmt)
+    def check_date_format(date_str: str, fmt: str) -> str:
+        new_date = datetime.strptime(date_str, fmt)
         new_date.strftime(fmt)
-        return date
+        return date_str
 
-    def check_iso_8601(self, date: str) -> str:
-        return self.check_date_format(date, self.iso_8601)
+    def check_iso_8601(self, date_str: str) -> str:
+        return self.check_date_format(date_str, self.iso_8601)
 
     @staticmethod
-    def add_start_of_day_time(date: str) -> str:
+    def add_start_of_day_time(date_str: str) -> str:
         "Adds midnight to a date string"
-        return f"{date}T00:00:00Z"
+        return f"{date_str}T00:00:00Z"
 
     @staticmethod
-    def add_end_of_day_time(date: str) -> str:
+    def add_end_of_day_time(date_str: str) -> str:
         "Adds 11:59PM to a date string"
-        return f"{date}T23:59:59Z"
+        return f"{date_str}T23:59:59Z"

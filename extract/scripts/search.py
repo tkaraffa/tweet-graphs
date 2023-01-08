@@ -5,7 +5,6 @@ from extract.util.base_api import DateFormatter
 
 
 def get_args():
-
     date_formatter = DateFormatter()
 
     parser = argparse.ArgumentParser(
@@ -47,7 +46,7 @@ def search():
     n_pages = args.n_pages
     bucket = args.bucket
 
-    twitter = TwitterAPI(query, date)
+    twitter = TwitterAPI(query=query, date=date)
 
     twitter.paginate_tweets(n_pages=n_pages)
     twitter.write_and_upload(twitter.results, twitter.filename, bucket)
