@@ -83,10 +83,10 @@ class SQLBase(ABC):
             )
 
     def execute_query_from_file(
-            self,
-            query_file: str,
-            return_results: Optional[bool] = False,
-            **kwargs,
+        self,
+        query_file: str,
+        return_results: Optional[bool] = False,
+        **kwargs,
     ) -> Optional[List[Tuple]]:
         """
         Execute a query from its file, optionally returning the resulting
@@ -123,7 +123,9 @@ class SQLBase(ABC):
         )
 
     def log_query(
-            self, query: Union[sa.sql.elements.TextClause, Callable], **kwargs
+        self,
+        query: Union[sa.sql.elements.TextClause, Callable],
+        **kwargs,
     ) -> None:
         self.logger.info(f"{'Executing Query':-^40}")
         if isinstance(query, sa.sql.elements.TextClause):
