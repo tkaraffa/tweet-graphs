@@ -2,8 +2,8 @@ from typing import Any
 import os
 from dataclasses import dataclass, field
 
-from load.sql_base import SQLBase
-from load.sql_enums import ConnectionStrings
+from util.sql_base import SQLBase
+from util.sql_enums import ConnectionStrings
 
 
 @dataclass

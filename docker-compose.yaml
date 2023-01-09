@@ -1,0 +1,32 @@
+version: '3'
+
+services:
+  extract:
+    build:
+      context: .
+      dockerfile: Dockerfile
+      args:
+        SERVICE: extract
+    extends:
+      file: common.yaml
+      service: elt
+    environment:
+      API_KEY: ${API_KEY}
+      API_KEY_SECRET: ${API_KEY_SECRET}
+      BEARER_TOKEN: ${BEARER_TOKEN}
+      ACCESS_TOKEN: ${ACCESS_TOKEN}
+      ACCESS_TOKEN_SECRET: ${ACCESS_TOKEN_SECRET}
+
+
+  load:
+    build:
+      context: .
+      dockerfile: Dockerfile
+      args:
+        SERVICE: load
+    extends:
+      file: common.yaml
+      service: elt
+    environment:
+      GOOGLE_CLOUD_PROJECT: ${GOOGLE_CLOUD_PROJECT}
+      BIGQUERY_DATASET: ${BIGQUERY_DATASET}

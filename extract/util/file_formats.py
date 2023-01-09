@@ -4,7 +4,7 @@ from pathlib import Path
 from abc import ABC, abstractmethod
 from dataclasses import dataclass, field
 
-from extract.util.api_enums import FileFormats
+from util.api_enums import FileFormats
 
 
 class Formatter(ABC):

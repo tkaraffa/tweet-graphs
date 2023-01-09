@@ -4,10 +4,9 @@ using a user-provided .sql or .py file.
 """
 
 import argparse
-import os
 import json
 
-from load.bigquery import SQLBigquery
+from src.bigquery import SQLBigquery
 
 
 def parse_args() -> argparse.Namespace:
@@ -39,8 +38,7 @@ def main():
     params = args.params
     return_results = args.return_results
 
-    query_directory = os.path.join("load", "queries")
-    sql = SQLBigquery(query_directory=query_directory)
+    sql = SQLBigquery()
 
     res = sql.execute_query_from_file(
         query_file, return_results=return_results, **params

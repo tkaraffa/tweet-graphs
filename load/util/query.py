@@ -6,7 +6,7 @@ from dataclasses import dataclass, field
 
 import sqlalchemy as sa
 
-from load.sql_enums import FileTypes
+from util.sql_enums import FileTypes
 
 
 @dataclass(frozen=True)

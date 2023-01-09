@@ -1,13 +1,13 @@
 FROM python:3.10-slim
 
-# COPY global_requirments.txt /code/global_requirments.txt
-COPY requirements.txt /code/requirements.txt
+ARG SERVICE
 
-COPY ./ /code
-WORKDIR /code
-ENV PYTHONPATH=/code
+COPY ./$SERVICE /code/$SERVICE
+COPY ./$GOOGLE_APPLICATION_CREDENTIALS /$GOOGLE_APPLICATION_CREDENTIALS
 
-# RUN pip install --user -r global_requirments.txt
-RUN pip install --user -r requirements.txt
+WORKDIR /code/$SERVICE
+ENV PYTHONPATH=/code/$SERVICE
+
+RUN pip install --user -r /code/$SERVICE/requirements.txt
 
 ENTRYPOINT ["python"]
