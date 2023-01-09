@@ -1,0 +1,8 @@
+version: '2'
+
+services:
+  elt:
+    environment:
+      GOOGLE_APPLICATION_CREDENTIALS: ${GOOGLE_APPLICATION_CREDENTIALS}
+    volumes:
+      - ./:/code

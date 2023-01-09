@@ -8,18 +8,17 @@ from dataclasses import dataclass, field
 
 import sqlalchemy as sa
 
-from load.query import SQLQuery, PyQuery, Query
+from util.query import SQLQuery, PyQuery, Query
 
 
 @dataclass
 class SQLBase(ABC):
     conn_string: str
     credentials: dict
-    query_directory: Optional[str] = field(default_factory=str)
 
     @property
     def queriers(self) -> Dict[str, Query]:
-        return {query.filetype: query() for query in {SQLQuery, PyQuery}}
+        return {querier.filetype: querier() for querier in {SQLQuery, PyQuery}}
 
     @property
     def logger(self) -> logging.Logger:
@@ -67,13 +66,11 @@ class SQLBase(ABC):
         NotImplementedError
             if file is of an unsupported type
         """
-        full_file_path = os.path.join(self.query_directory, query_file)
         file_suffix = Path(query_file).suffix
         # make sure file exists and has valid extension
-        if not os.path.exists(full_file_path):
+        if not os.path.exists(query_file):
             raise FileNotFoundError(
-                f"{full_file_path} does not exist!"
-                + f"Check {self.query_directory} for your file."
+                f"{query_file} does not exist!"
             )
         if file_suffix not in self.queriers:
             raise NotImplementedError(
@@ -83,10 +80,10 @@ class SQLBase(ABC):
             )
 
     def execute_query_from_file(
-        self,
-        query_file: str,
-        return_results: Optional[bool] = False,
-        **kwargs,
+            self,
+            query_file: str,
+            return_results: Optional[bool] = False,
+            **kwargs,
     ) -> Optional[List[Tuple]]:
         """
         Execute a query from its file, optionally returning the resulting
@@ -101,11 +98,10 @@ class SQLBase(ABC):
         -------
 
         """
-        full_file_path = os.path.join(self.query_directory, query_file)
         file_suffix = Path(query_file).suffix
 
         querier = self.queriers.get(file_suffix)
-        query = querier.find_query(full_file_path)
+        query = querier.find_query(query_file)
 
         self.log_query(query, **kwargs)
 
@@ -123,9 +119,9 @@ class SQLBase(ABC):
         )
 
     def log_query(
-        self,
-        query: Union[sa.sql.elements.TextClause, Callable],
-        **kwargs,
+            self,
+            query: Union[sa.sql.elements.TextClause, Callable],
+            **kwargs,
     ) -> None:
         self.logger.info(f"{'Executing Query':-^40}")
         if isinstance(query, sa.sql.elements.TextClause):
@@ -133,8 +129,8 @@ class SQLBase(ABC):
         elif isinstance(query, Callable):
             self.logger.info(str(query()))
 
-        # self.logger.info(str(query))
-        self.logger.info(f"{'With Parameters':-^40}")
-        for key, value in kwargs.items():
-            self.logger.info(f"{key}: {value}")
+        if kwargs:
+            self.logger.info(f"{'With Parameters':-^40}")
+            for key, value in kwargs.items():
+                self.logger.info(f"{key}: {value}")
         self.logger.info(f"{'':-^40}")
