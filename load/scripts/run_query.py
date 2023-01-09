@@ -4,7 +4,6 @@ using a user-provided .sql or .py file.
 """
 
 import argparse
-import os
 import json
 
 from src.bigquery import SQLBigquery

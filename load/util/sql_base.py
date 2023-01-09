@@ -69,9 +69,7 @@ class SQLBase(ABC):
         file_suffix = Path(query_file).suffix
         # make sure file exists and has valid extension
         if not os.path.exists(query_file):
-            raise FileNotFoundError(
-                f"{query_file} does not exist!"
-            )
+            raise FileNotFoundError(f"{query_file} does not exist!")
         if file_suffix not in self.queriers:
             raise NotImplementedError(
                 f"You used a {file_suffix} file. "
@@ -80,10 +78,10 @@ class SQLBase(ABC):
             )
 
     def execute_query_from_file(
-            self,
-            query_file: str,
-            return_results: Optional[bool] = False,
-            **kwargs,
+        self,
+        query_file: str,
+        return_results: Optional[bool] = False,
+        **kwargs,
     ) -> Optional[List[Tuple]]:
         """
         Execute a query from its file, optionally returning the resulting
@@ -119,9 +117,9 @@ class SQLBase(ABC):
         )
 
     def log_query(
-            self,
-            query: Union[sa.sql.elements.TextClause, Callable],
-            **kwargs,
+        self,
+        query: Union[sa.sql.elements.TextClause, Callable],
+        **kwargs,
     ) -> None:
         self.logger.info(f"{'Executing Query':-^40}")
         if isinstance(query, sa.sql.elements.TextClause):

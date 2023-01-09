@@ -51,7 +51,7 @@ class PyQuery(Query):
 
     @staticmethod
     def find_query(
-            file_path: str, function_name: Optional[str] = "query"
+        file_path: str, function_name: Optional[str] = "query"
     ) -> sa.select:
         spec = importlib.util.spec_from_file_location(function_name, file_path)
         module = importlib.util.module_from_spec(spec)

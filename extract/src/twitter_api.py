@@ -2,9 +2,9 @@ import os
 import json
 from dataclasses import dataclass, field
 
-from extract.util.base_api import APIBase
-from extract.util.file_formats import JSONLFormatter, Formatter
-from extract.twitter_enums import (
+from util.base_api import APIBase
+from util.file_formats import JSONLFormatter, Formatter
+from src.twitter_enums import (
     TweetMediaFields,
     TweetPlaceFields,
     TweetPollFields,

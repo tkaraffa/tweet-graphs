@@ -10,10 +10,10 @@ import os
 import logging
 from dataclasses import dataclass, field
 
-from extract.util.api_enums import APIEnums
-from extract.util.api_exceptions import ValidationException
-from extract.util.dates import DateFormatter
-from extract.util.gcp_utils import GCPUtil
+from util.api_enums import APIEnums
+from util.api_exceptions import ValidationException
+from util.dates import DateFormatter
+from util.gcp_utils import GCPUtil
 
 
 @dataclass
