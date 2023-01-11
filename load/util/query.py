@@ -1,5 +1,5 @@
 from abc import ABC, abstractmethod
-from typing import Optional
+from typing import Optional, Callable, Union
 import importlib.util
 import sys
 from dataclasses import dataclass, field
@@ -21,6 +21,11 @@ class Query(ABC):
     def find_query(file_path: str):
         """Abstract method for finding a query from a file"""
 
+    @staticmethod
+    @abstractmethod
+    def get_query_string(query: Union[Callable, sa.sql.elements.TextClause]):
+        """Abstract method for getting the string rep of a query"""
+
 
 @dataclass(frozen=True)
 class SQLQuery(Query):
@@ -38,6 +43,10 @@ class SQLQuery(Query):
             query = sa.text(f.read())
         return query
 
+    @staticmethod
+    def get_query_string(query: sa.sql.elements.TextClause) -> str:
+        return str(query)
+
 
 @dataclass(frozen=True)
 class PyQuery(Query):
@@ -51,10 +60,14 @@ class PyQuery(Query):
 
     @staticmethod
     def find_query(
-        file_path: str, function_name: Optional[str] = "query"
+            file_path: str, function_name: Optional[str] = "query"
     ) -> sa.select:
         spec = importlib.util.spec_from_file_location(function_name, file_path)
         module = importlib.util.module_from_spec(spec)
         sys.modules[function_name] = module
         spec.loader.exec_module(module)
         return module.query
+
+    @staticmethod
+    def get_query_string(query: Callable) -> str:
+        return str(query())

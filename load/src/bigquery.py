@@ -1,6 +1,7 @@
 from typing import Any
 import os
 from dataclasses import dataclass, field
+from enum import Enum
 
 from util.sql_base import SQLBase
 from util.sql_enums import ConnectionStrings
@@ -14,6 +15,6 @@ class SQLBigquery(SQLBase):
         )
     )
 
-    conn_string: str = field(
-        default=ConnectionStrings.BIGQUERY.value, init=False
+    conn_string: ConnectionStrings = field(
+        default=ConnectionStrings.BIGQUERY, init=False
     )

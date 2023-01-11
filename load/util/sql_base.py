@@ -8,12 +8,13 @@ from dataclasses import dataclass, field
 
 import sqlalchemy as sa
 
+from util.sql_enums import ConnectionStrings
 from util.query import SQLQuery, PyQuery, Query
 
 
 @dataclass
 class SQLBase(ABC):
-    conn_string: str
+    conn_string: ConnectionStrings
     credentials: dict
 
     @property
@@ -40,7 +41,7 @@ class SQLBase(ABC):
         Property for executing SQL queries, either
         string representations or SQLAlchemy select objects.
         """
-        return sa.engine.create_engine(self.conn_string, **self.credentials)
+        return sa.engine.create_engine(self.conn_string.value, **self.credentials)
 
     def validate_query_file(self, query_file: str) -> None:
         """
@@ -78,10 +79,10 @@ class SQLBase(ABC):
             )
 
     def execute_query_from_file(
-        self,
-        query_file: str,
-        return_results: Optional[bool] = False,
-        **kwargs,
+            self,
+            query_file: str,
+            return_results: Optional[bool] = False,
+            **kwargs,
     ) -> Optional[List[Tuple]]:
         """
         Execute a query from its file, optionally returning the resulting
@@ -101,7 +102,9 @@ class SQLBase(ABC):
         querier = self.queriers.get(file_suffix)
         query = querier.find_query(query_file)
 
-        self.log_query(query, **kwargs)
+        # log query
+        query_string = querier.get_query_string(query)
+        self.log_query(query_string, **kwargs)
 
         results = querier.execute_query(self.engine, query, **kwargs)
         if return_results is True:
@@ -117,16 +120,12 @@ class SQLBase(ABC):
         )
 
     def log_query(
-        self,
-        query: Union[sa.sql.elements.TextClause, Callable],
-        **kwargs,
+            self,
+            query_string: str,
+            **kwargs
     ) -> None:
         self.logger.info(f"{'Executing Query':-^40}")
-        if isinstance(query, sa.sql.elements.TextClause):
-            self.logger.info(str(query))
-        elif isinstance(query, Callable):
-            self.logger.info(str(query()))
-
+        self.logger.info(query_string)
         if kwargs:
             self.logger.info(f"{'With Parameters':-^40}")
             for key, value in kwargs.items():
