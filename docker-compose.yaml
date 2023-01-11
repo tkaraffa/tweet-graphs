@@ -2,9 +2,10 @@ version: '3'
 
 services:
   extract:
+    image: tweet-graphs-extract
     build:
       context: .
-      dockerfile: Dockerfile
+      dockerfile: ./docker/python/Dockerfile
       args:
         SERVICE: extract
     extends:
@@ -19,9 +20,10 @@ services:
 
 
   load:
+    image: tweet-graphs-extract
     build:
       context: .
-      dockerfile: Dockerfile
+      dockerfile: ./docker/python/Dockerfile
       args:
         SERVICE: load
     extends:
@@ -30,3 +32,13 @@ services:
     environment:
       GOOGLE_CLOUD_PROJECT: ${GOOGLE_CLOUD_PROJECT}
       BIGQUERY_DATASET: ${BIGQUERY_DATASET}
+
+  transform:
+    image: tweet-graphs-transform
+    build:
+      context: .
+      dockerfile: ./docker/dbt/Dockerfile
+      args:
+        SERVICE: transform
+    volumes:
+      - ./:/code
