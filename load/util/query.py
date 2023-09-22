@@ -47,6 +47,7 @@ class SQLQuery(Query):
     def execute_query(engine: sa.engine, query: str, **kwargs):
         with engine.connect() as conn:
             result = conn.execute(query, **kwargs)
+            conn.commit()
         return result
 
     @staticmethod
@@ -68,6 +69,7 @@ class PyQuery(Query):
     def execute_query(engine: sa.engine, query: sa.select, **kwargs):
         with engine.connect() as conn:
             result = conn.execute(query(**kwargs))
+            conn.commit()
         return result
 
     @staticmethod
