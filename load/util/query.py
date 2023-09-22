@@ -1,16 +1,24 @@
-from abc import ABC, abstractmethod
+from abc import ABC, abstractmethod, abstractproperty
 from typing import Optional, Callable, Union
-import importlib.util
+from importlib.util import spec_from_file_location, module_from_spec
 import sys
 from dataclasses import dataclass, field
 
 import sqlalchemy as sa
 
-from util.sql_enums import FileTypes
+from util.sql_enums import FileType
 
 
 @dataclass(frozen=True)
 class Query(ABC):
+    """
+    Abstract class for executing queries from files using SQLAlchemy
+    """
+
+    @abstractproperty
+    def filetype(self):
+        """Abstract property for class's file type"""
+
     @staticmethod
     @abstractmethod
     def execute_query(engine: sa.engine, query: str, **kwargs):
@@ -29,7 +37,11 @@ class Query(ABC):
 
 @dataclass(frozen=True)
 class SQLQuery(Query):
-    filetype: str = field(default=FileTypes.SQL.value, init=False)
+    """
+    Class that supports executing queries from .sql files
+    """
+
+    filetype: FileType = FileType.SQL
 
     @staticmethod
     def execute_query(engine: sa.engine, query: str, **kwargs):
@@ -50,7 +62,7 @@ class SQLQuery(Query):
 
 @dataclass(frozen=True)
 class PyQuery(Query):
-    filetype: str = field(default=FileTypes.PY.value, init=False)
+    filetype: FileType = FileType.PY
 
     @staticmethod
     def execute_query(engine: sa.engine, query: sa.select, **kwargs):
@@ -60,13 +72,13 @@ class PyQuery(Query):
 
     @staticmethod
     def find_query(
-            file_path: str, function_name: Optional[str] = "query"
+        file_path: str, function_name: Optional[str] = "query"
     ) -> sa.select:
-        spec = importlib.util.spec_from_file_location(function_name, file_path)
-        module = importlib.util.module_from_spec(spec)
+        spec = spec_from_file_location(function_name, file_path)
+        module = module_from_spec(spec)
         sys.modules[function_name] = module
         spec.loader.exec_module(module)
-        return module.query
+        return getattr(module, function_name)
 
     @staticmethod
     def get_query_string(query: Callable) -> str:

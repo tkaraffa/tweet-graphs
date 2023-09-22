@@ -1,15 +1,22 @@
+from typing import Any
 import argparse
 
-from src.twitter_api import TwitterAPI
 from util.base_api import DateFormatter
+from src.apis import get_api_class
+from util.gcp_utils import GCPUtil
 
 
 def get_args():
     date_formatter = DateFormatter()
 
     parser = argparse.ArgumentParser(
-        prog="search.py",
-        description="Search for Tweets based on a term.",
+        prog="main.py",
+        description="Search for something in an API based on a term.",
+    )
+    parser.add_argument(
+        "api",
+        type=str,
+        help="The API to use.",
     )
     parser.add_argument(
         "query",
@@ -39,18 +46,14 @@ def get_args():
     return parser.parse_args()
 
 
-def search():
+def main():
     args = get_args()
-    query = args.query
-    date = args.date
-    n_pages = args.n_pages
-    bucket = args.bucket
-
-    twitter = TwitterAPI(query=query, date=date)
-
-    twitter.paginate_tweets(n_pages=n_pages)
-    twitter.write_and_upload(twitter.results, twitter.filename, bucket)
+    api_class = get_api_class(args.api)
+    api = api_class(query=args.query, date=args.date, cloud_util=GCPUtil())
+    api.get_responses()
+    # api.paginate_tweets(n_pages=args.n_pages)
+    api.write_and_upload(api.results, api.filename, args.bucket)
 
 
 if __name__ == "__main__":
-    search()
+    main()

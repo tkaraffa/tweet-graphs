@@ -8,18 +8,21 @@ from dataclasses import dataclass, field
 
 import sqlalchemy as sa
 
-from util.sql_enums import ConnectionStrings
+from util.sql_enums import ConnectionString
 from util.query import SQLQuery, PyQuery, Query
 
 
 @dataclass
 class SQLBase(ABC):
-    conn_string: ConnectionStrings
+    conn_string: ConnectionString
     credentials: dict
 
     @property
     def queriers(self) -> Dict[str, Query]:
-        return {querier.filetype: querier() for querier in {SQLQuery, PyQuery}}
+        return {
+            querier.filetype.value: querier()
+            for querier in {SQLQuery, PyQuery}
+        }
 
     @property
     def logger(self) -> logging.Logger:
@@ -41,7 +44,9 @@ class SQLBase(ABC):
         Property for executing SQL queries, either
         string representations or SQLAlchemy select objects.
         """
-        return sa.engine.create_engine(self.conn_string.value, **self.credentials)
+        return sa.engine.create_engine(
+            sa.URL.create(self.conn_string.value, **self.credentials)
+        )
 
     def validate_query_file(self, query_file: str) -> None:
         """
@@ -79,10 +84,10 @@ class SQLBase(ABC):
             )
 
     def execute_query_from_file(
-            self,
-            query_file: str,
-            return_results: Optional[bool] = False,
-            **kwargs,
+        self,
+        query_file: str,
+        return_results: Optional[bool] = False,
+        **kwargs,
     ) -> Optional[List[Tuple]]:
         """
         Execute a query from its file, optionally returning the resulting
@@ -119,11 +124,7 @@ class SQLBase(ABC):
             autoload_with=self.engine,
         )
 
-    def log_query(
-            self,
-            query_string: str,
-            **kwargs
-    ) -> None:
+    def log_query(self, query_string: str, **kwargs) -> None:
         self.logger.info(f"{'Executing Query':-^40}")
         self.logger.info(query_string)
         if kwargs:

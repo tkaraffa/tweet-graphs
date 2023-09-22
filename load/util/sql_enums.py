@@ -1,10 +1,11 @@
 from enum import Enum
 
 
-class ConnectionStrings(Enum):
-    BIGQUERY = "bigquery://"
+class ConnectionString(Enum):
+    BIGQUERY = "bigquery"
+    SQLITE = "sqlite"
 
 
-class FileTypes(Enum):
+class FileType(Enum):
     PY = ".py"
     SQL = ".sql"

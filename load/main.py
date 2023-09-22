@@ -7,6 +7,7 @@ import argparse
 import json
 
 from src.bigquery import SQLBigquery
+from src.sqlite import SQLSqlite
 
 
 def parse_args() -> argparse.Namespace:
@@ -38,7 +39,8 @@ def main():
     params = args.params
     return_results = args.return_results
 
-    sql = SQLBigquery()
+    # sql = SQLBigquery()
+    sql = SQLSqlite()
 
     res = sql.execute_query_from_file(
         query_file, return_results=return_results, **params

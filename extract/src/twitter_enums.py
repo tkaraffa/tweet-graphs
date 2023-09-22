@@ -1,17 +1,6 @@
 from enum import Enum
 
 
-class TwitterAPIDefaults(Enum):
-    MAX_RESULTS = 100
-    META = "meta"
-    DATA = "data"
-    NEXT_TOKEN = "next_token"
-
-
-class TwitterURLs(Enum):
-    HOST = "api.twitter.com/2"
-
-
 class TwitterEndpoints(Enum):
     SEARCH_RECENT = "tweets/search/recent"
     SEARCH_ALL = "tweets/search/all"

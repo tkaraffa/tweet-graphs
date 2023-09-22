@@ -4,5 +4,6 @@ services:
   elt:
     environment:
       GOOGLE_APPLICATION_CREDENTIALS: ${GOOGLE_APPLICATION_CREDENTIALS}
+      GOOGLE_CLOUD_PROJECT: ${GOOGLE_CLOUD_PROJECT}
     volumes:
-      - ./:/code
+      - ./:/src

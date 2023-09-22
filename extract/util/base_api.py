@@ -1,4 +1,4 @@
-from typing import Callable, Union
+from typing import Callable, Union, Optional
 import urllib.parse
 import urllib.request
 import urllib.error
@@ -22,6 +22,8 @@ class APIBase(ABC):
     General-purpose class for making API requests.
     """
 
+    cloud_util: Union[GCPUtil]
+
     tries: int = 10
     delay: int = 3
     backoff: int = 2
@@ -29,13 +31,17 @@ class APIBase(ABC):
     logger: logging.Logger = None
     scheme: str = field(default=APIEnums.SCHEME.value)
 
-    date_formatter: DateFormatter = field(default=DateFormatter(), init=False)
-    gcp_util: GCPUtil = field(default=GCPUtil(), init=False)
+    date_formatter: DateFormatter = DateFormatter()
 
     @property
     @abstractmethod
     def file_formatter(self):
         """Abstract property for file formatter"""
+
+    @property
+    @abstractmethod
+    def filename(self) -> str:
+        """Abstract method for creating file name in which to write data."""
 
     @property
     def exceptions(self):
@@ -52,13 +58,8 @@ class APIBase(ABC):
     ) -> urllib.request.Request:
         """Abstract method for API-specific validation functions."""
 
-    @property
-    @abstractmethod
-    def validation_exception(self):
-        """Abstract property for validation exception"""
-
     @staticmethod
-    def _encode_payload(payload: dict = None) -> bytes:
+    def _encode_payload(payload: dict = None) -> Optional[bytes]:
         """Encodes payload for a request."""
         if payload is not None:
             return json.dumps(payload).encode("utf-8")
@@ -77,21 +78,16 @@ class APIBase(ABC):
         Construct a request with optional payload
 
         """
-        netloc = host
-        path = endpoint
-        params = params
         query = (
             urllib.parse.urlencode(query, safe=safe, doseq=True)
-            if query
+            if query is not None
             else None
         )
-        fragment = None
-        url = urllib.parse.urlunparse(
-            (self.scheme, netloc, path, params, query, fragment)
-        )
-        request = urllib.request.Request(
-            url, headers=headers, data=self._encode_payload(payload)
-        )
+        data = self._encode_payload(payload)
+
+        components = (self.scheme, host, endpoint, params, query, None)
+        url = urllib.parse.urlunparse(components)
+        request = urllib.request.Request(url, headers=headers, data=data)
         return request
 
     def _send_request(self, request: urllib.request.Request) -> str:
@@ -113,18 +109,18 @@ class APIBase(ABC):
         return data
 
     def _retry_request(
-        self, func: Callable, url: str, **kwargs
+        self, func: Callable, url: urllib.request.Request, **kwargs
     ) -> Union[str, None]:
-
         tries = self.tries
         delay = self.delay
-        backoff = self.backoff
+
+        print(url.full_url)
 
         while tries > 1:
             try:
                 result = func(url, **kwargs)
-                if self.validation_function(result) is False:
-                    raise self.validation_exception
+                # if self.validation_function(result) is False:
+                #     raise self.validation_exception
                 return result
             except Exception as e:
                 if e in self.exceptions:
@@ -136,7 +132,7 @@ class APIBase(ABC):
                     self.logger.warning(message)
                 sleep(delay)
                 tries -= 1
-                delay *= backoff
+                delay *= self.backoff
 
     def pull_request_data(
         self, request: urllib.request.Request, **kwargs
@@ -154,12 +150,17 @@ class APIBase(ABC):
         data = self._retry_request(self._send_request, request, **kwargs)
         return data
 
-    def write_and_upload(
-        self, data: list, filename: str, bucket: str, **kwargs
-    ) -> None:
+    @abstractmethod
+    def get_responses():
+        """Abstract method for getting API responses"""
+
+    # this should really write to temp files
+    def write_and_upload(self, bucket: str, **kwargs) -> None:
         try:
-            self.file_formatter.write_file(data=data, filename=filename)
-            self.gcp_util.upload_file_to_bucket(filename, bucket, **kwargs)
+            self.file_formatter.write_file(
+                data=self.data, filename=self.filename
+            )
+            self.cloud_util.upload_file_to_bucket(filename, bucket, **kwargs)
         except Exception as e:
             raise e
         finally:

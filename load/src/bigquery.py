@@ -4,7 +4,7 @@ from dataclasses import dataclass, field
 from enum import Enum
 
 from util.sql_base import SQLBase
-from util.sql_enums import ConnectionStrings
+from util.sql_enums import ConnectionString
 
 
 @dataclass
@@ -15,6 +15,4 @@ class SQLBigquery(SQLBase):
         )
     )
 
-    conn_string: ConnectionStrings = field(
-        default=ConnectionStrings.BIGQUERY, init=False
-    )
+    conn_string: ConnectionString = ConnectionString.BIGQUERY

@@ -17,10 +17,12 @@ services:
       BEARER_TOKEN: ${BEARER_TOKEN}
       ACCESS_TOKEN: ${ACCESS_TOKEN}
       ACCESS_TOKEN_SECRET: ${ACCESS_TOKEN_SECRET}
+      CLIENT_ID: ${CLIENT_ID}
+      CLIENT_SECRET: ${CLIENT_SECRET}
 
 
   load:
-    image: tweet-graphs-extract
+    image: tweet-graphs-load
     build:
       context: .
       dockerfile: ./docker/python/Dockerfile
@@ -33,12 +35,12 @@ services:
       GOOGLE_CLOUD_PROJECT: ${GOOGLE_CLOUD_PROJECT}
       BIGQUERY_DATASET: ${BIGQUERY_DATASET}
 
-  transform:
-    image: tweet-graphs-transform
-    build:
-      context: .
-      dockerfile: ./docker/dbt/Dockerfile
-      args:
-        SERVICE: transform
-    volumes:
-      - ./:/code
+  # transform:
+  #   image: tweet-graphs-transform
+  #   build:
+  #     context: .
+  #     dockerfile: ./docker/dbt/Dockerfile
+  #     args:
+  #       SERVICE: transform
+  #   volumes:
+  #     - ./:/code

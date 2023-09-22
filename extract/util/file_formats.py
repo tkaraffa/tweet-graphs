@@ -7,6 +7,7 @@ from dataclasses import dataclass, field
 from util.api_enums import FileFormats
 
 
+@dataclass
 class Formatter(ABC):
     file_format: str
 
@@ -15,7 +16,7 @@ class Formatter(ABC):
     def write_file(data: list, filename: str) -> None:
         """Abstract method for writing a file"""
 
-    def check_file(self, filename: str) -> str:
+    def check_file(self, filename: str):
         """
         Check that a file has the correct extension
 
@@ -24,9 +25,6 @@ class Formatter(ABC):
         filename: str
             The filename to check
 
-        Returns
-        -------
-        filename: str
 
         Raises
         ------
@@ -36,7 +34,6 @@ class Formatter(ABC):
         file_suffix = Path(filename).suffix
         if file_suffix != self.file_format:
             raise TypeError(f"Please use {self.file_format} file extension.")
-        return filename
 
 
 @dataclass
