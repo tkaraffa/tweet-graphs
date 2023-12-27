@@ -5,9 +5,12 @@ using a user-provided .sql or .py file.
 
 import argparse
 import json
+from util.sql_enums import Connector
+from util.sql_base import SQLBase
 
-from src.bigquery import SQLBigquery
-from src.sqlite import SQLSqlite
+
+def get_connector(connector_name: str) -> SQLBase:
+    return Connector[connector_name].value
 
 
 def parse_args() -> argparse.Namespace:
@@ -29,18 +32,29 @@ def parse_args() -> argparse.Namespace:
         action="store_true",
         help="Flag for whether or not to return the results of the query.",
     )
+    parser.add_argument(
+        "--connector",
+        "-c",
+        type=get_connector,
+        help="The database connector to use.",
+    )
+    parser.add_argument(
+        "--credentials",
+        type=json.loads,
+        help="Credentials to use for the database connection.",
+    )
     return parser.parse_args()
 
 
 def main():
     args = parse_args()
 
+    connector = args.connector
     query_file = args.query
     params = args.params
     return_results = args.return_results
-
-    # sql = SQLBigquery()
-    sql = SQLSqlite()
+    credentials = args.credentials
+    sql = connector(credentials=credentials)
 
     res = sql.execute_query_from_file(
         query_file, return_results=return_results, **params
