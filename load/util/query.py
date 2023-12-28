@@ -73,9 +73,7 @@ class PyQuery(Query):
         return result
 
     @staticmethod
-    def find_query(
-        file_path: str, function_name: Optional[str] = "query"
-    ) -> sa.select:
+    def find_query(file_path: str, function_name: Optional[str] = "query") -> sa.select:
         spec = spec_from_file_location(function_name, file_path)
         module = module_from_spec(spec)
         sys.modules[function_name] = module

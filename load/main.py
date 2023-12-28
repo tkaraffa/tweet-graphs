@@ -5,18 +5,27 @@ using a user-provided .sql or .py file.
 
 import argparse
 import json
-from util.sql_enums import Connector
+from enum import Enum
 from util.sql_base import SQLBase
+from util.filter_args import filter_args
+from src.bigquery import SQLBigquery
+from src.sqlite import SQLSqlite
+
+
+class Connector(Enum):
+    BIGQUERY = SQLBigquery
+    SQLLITE = SQLSqlite
 
 
 def get_connector(connector_name: str) -> SQLBase:
-    return Connector[connector_name].value
+    print(connector_name)
+    return Connector[connector_name.upper()].value
 
 
 def parse_args() -> argparse.Namespace:
     parser = argparse.ArgumentParser()
     parser.add_argument(
-        "query",
+        "query_file",
         type=str,
         help="The query file to run.",
     )
@@ -37,6 +46,7 @@ def parse_args() -> argparse.Namespace:
         "-c",
         type=get_connector,
         help="The database connector to use.",
+        required=True,
     )
     parser.add_argument(
         "--credentials",
@@ -50,15 +60,20 @@ def main():
     args = parse_args()
 
     connector = args.connector
-    query_file = args.query
-    params = args.params
-    return_results = args.return_results
-    credentials = args.credentials
-    sql = connector(credentials=credentials)
-
-    res = sql.execute_query_from_file(
-        query_file, return_results=return_results, **params
+    connector_args = filter_args(args, include_keys=["credentials"])
+    execute_args = filter_args(
+        args,
+        include_keys=[
+            "query_file",
+            "return_results",
+            "params",
+        ],
     )
+
+    return_results = args.return_results
+
+    sql = connector(**connector_args)
+    res = sql.execute_query_from_file(**execute_args)
     if return_results:
         print(res)
 

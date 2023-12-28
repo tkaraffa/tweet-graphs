@@ -16,10 +16,6 @@ from util.query import SQLQuery, PyQuery, Query
 class SQLBase(ABC):
     conn_string: ConnectionString
     credentials: dict
-    credentials_default: field(repr=False, default=None)
-
-    def __post_init__(self):
-        self.credentials = self.credentials or self.credentials_default
 
     @property
     def queriers(self) -> Dict[str, Query]:
